@@ -283,8 +283,6 @@
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
-  </script>
-  <script>
     const accountButton = document.getElementById('accountButton');
     const accountModal = document.getElementById('accountModal');
     const profileModal = document.getElementById('profileModal');
