@@ -1,161 +1,178 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Laboratório Quântico - Experiência 3D Interativa</title>
-  
-  <!-- Fontes Google -->
+  <title>Modelo Atômico 3D - Átomo de Boro</title>
+  <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="style.css">
-
-  <!-- Bibliotecas externas via CDN (Three.js & GSAP) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-  <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <!-- Fundo com gradiente radial estilo estúdio -->
   <div id="studio-background"></div>
 
-  <!-- Container WebGL 3D Fixo -->
-  <div id="webgl-container"></div>
+  <header class="site-header">
+    <div class="logo">Química 3D</div>
+    <nav class="content-links">
+      <a href="#videos">Vídeos</a>
+      <a href="#jogo">Jogo educacional</a>
+      <a href="#phet">PhET</a>
+      <a href="#bond">Bond Breaker</a>
+      <a href="#provao">Provão</a>
+    </nav>
+    <div class="accessibility-controls">
+      <button id="btn-diminuir-fonte" class="btn-control" aria-label="Diminuir Fonte">-A</button>
+      <span id="porcentagem-atual">100%</span>
+      <button id="btn-aumentar-fonte" class="btn-control" aria-label="Aumentar Fonte">+A</button>
 
-  <!-- Cabeçalho -->
-  <header>
-    <div class="logo">
-      <div class="logo-dot"></div>
-      QUÍMICA BGS
-    </div>
-    <div class="site-controls">
-      <button id="languageButton" type="button">PT</button>
-      <button id="textSizeButton" type="button" title="Aumentar textos" aria-label="Aumentar textos">+A</button>
-      <button id="textSizeButton" type="button" title="diminuir textos" aria-label="diminuir textos">-A</button>
-      <button id="colorButton" type="button" title="Mudar de cor" aria-label="Mudar de cor">Mudar de cor</button>
-      <button id="themeButton" type="button">Modo claro</button>
-      <button class="reader-button" id="readerButton" type="button" aria-expanded="false" aria-controls="readerPanel"><i class="fa-solid fa-volume-high" aria-hidden="true"></i><span>Leitura</span></button>
-      <button class="profile-button" id="accountButton" type="button"><span id="accountLabel">Cadastrar</span></button>
-      <button class="avatar-button" id="profileButton" type="button" title="Abrir perfil" aria-label="Abrir perfil"><span class="profile-avatar" id="headerAvatar">Q</span></button>
+      <button id="themeButton" class="btn-control">Modo claro</button>
+      <button id="colorButton" class="btn-control">Mudar de cor</button>
+      <button id="languageButton" class="btn-control">PT</button>
+      <button id="accountButton" class="btn-control"><span id="accountLabel">Cadastrar</span></button>
+      <button id="profileButton" class="btn-avatar"><div id="headerAvatar" class="avatar">V</div></button>
     </div>
   </header>
 
-  <!-- Trilho de Rolagem e Conteúdo -->
-  <div class="scroll-track">
+  <main class="scroll-track">
+    <div id="webgl-container"></div>
+
     <div class="content-overlay">
-      
-      <!-- Fase 1: Escala Hero / Destaque -->
-      <section class="section center">
-        <div class="glass-card" style="max-width: 600px;">
-          <span class="tag">Estrutura Atômica</span>
-          <h1>ÁTOMO DE BORO</h1>
-          <p>Explore a matéria no seu nível mais fundamental. Role a página para iniciar o zoom e desacoplar o modelo atômico em visão explodida.</p>
-        </div>
-        <div class="scroll-indicator">
-          <div class="mouse-icon"><div class="wheel"></div></div>
-          <span style="font-size: 0.75rem; letter-spacing: 1px;">ROLE PARA EXPLORAR</span>
-        </div>
-      </section>
-
-      <!-- Fase 2: Zoom Out e Início do Afastamento -->
       <section class="section">
-        <div class="glass-card">
-          <span class="tag">Fase 01 — Escala Quântica</span>
-          <h2>Camadas Eletrônicas</h2>
-          <p>Os elétrons orbitam em torno do núcleo denso em níveis discretos de energia. Afastando a câmera, revelamos o sistema orbital completo do elemento.</p>
-        </div>
+        <span class="tag">Estrutura Atômica</span>
+        <h1>ÁTOMO DE BORO</h1>
+        <p>Explore a matéria no seu nível mais fundamental. Role a página para iniciar o zoom e desacoplar o modelo atômico em visão explodida.</p>
       </section>
 
-      <!-- Fase 3: Visão Explodida -->
-      <section class="section right">
-        <div class="glass-card">
-          <span class="tag">Fase 02 — Visão Explodida</span>
-          <h2>Desconstrução de Núcleos</h2>
-          <p>A força nuclear forte é superada na simulação visual, revelando a composição individual do núcleo: 5 Prótons (positivo) e 6 Nêutrons (neutro).</p>
-        </div>
+      <section class="section">
+        <span class="tag">Fase 01 — Escala Quântica</span>
+        <h2>Camadas Eletrônicas</h2>
+        <p>Os elétrons orbitam em torno do núcleo denso em níveis discretos de energia. Afastando a câmera, revelamos o sistema orbital completo do elemento.</p>
       </section>
 
-      <!-- Fase 4: Órbita 360 Graus -->
-      <section class="section center">
-        <div class="glass-card">
-          <span class="tag">Fase 03 — Análise 360°</span>
-          <h2>Geometria das Partículas</h2>
-          <p>Análise tridimensional e espacial das forças quânticas subatômicas em rotação contínua de 360 graus.</p>
-        </div>
+      <section class="section">
+        <span class="tag">Fase 02 — Visão Explodida</span>
+        <h2>Desconstrução de Núcleos</h2>
+        <p>A força nuclear forte é superada na simulação visual, revelando a composição individual do núcleo: 5 Prótons e 6 Nêutrons.</p>
       </section>
 
+      <section class="section">
+        <span class="tag">Fase 03 — Análise 360°</span>
+        <h2>Geometria das Partículas</h2>
+        <p>Análise tridimensional e espacial das forças quânticas subatômicas em rotação contínua de 360 graus.</p>
+      </section>
     </div>
-  </div>
 
-  <section class="extra-content" id="conteudo">
-    <span class="tag">Conteúdo</span>
+    <div class="scroll-indicator">
+      <span>ROLE PARA EXPLORAR</span>
+    </div>
+  </main>
+
+  <section class="extra-content">
     <h2>Aprenda química do seu jeito</h2>
     <p class="extra-intro">Escolha uma atividade para continuar seus estudos, revisar os assuntos e praticar o que aprendeu.</p>
-    <div class="resource-grid">
-      <article class="resource-card" id="videos"><div><span class="tag">Aulas</span><h3>Vídeos</h3><p>Assista às resoluções do Enem e acompanhe o raciocínio passo a passo.</p></div><div><a href="https://www.youtube.com/watch?v=myuoNSypELY&t=16s" target="_blank" rel="noopener">Resolução 2023</a> <a href="https://www.youtube.com/watch?v=ogqns8ASadg&t=100s" target="_blank" rel="noopener">Resolução 2024</a> <a href="https://www.youtube.com/watch?v=URL_DO_VIDEO_CORRETO" target="_blank" rel="noopener">Resolução 2025</a></div></article>
-      <article class="resource-card" id="jogo"><div><span class="tag">Prática</span><h3>Jogo educacional</h3><p>Aprenda se divertindo com desafios de química.</p></div><a href="https://joaovitorazevedo-etc.github.io/Breaking-Game/" target="_blank" rel="noopener">Começar jogo</a></article>
-      <article class="resource-card" id="phet"><div><span class="tag">Experimentos</span><h3>PhET</h3><p>Teste experimentos práticos e observe os conceitos em ação.</p></div><a href="https://phet.colorado.edu/pt_BR/simulations/filter?subjects=chemistry&type=html" target="_blank" rel="noopener">Entrar no PhET</a></article>
-      <article class="resource-card" id="bond-breaker"><div><span class="tag">Eletroquímica</span><h3>Bond Breaker 2.0</h3><p>Explore ligações químicas em uma experiência interativa.</p></div><a href="https://testtubegames.com/bondbreaker.html" target="_blank" rel="noopener">Entrar</a></article>
-      <article class="resource-card" id="provao"><div><span class="tag">Desafio final</span><h3>Provão</h3><p>Teste seus conhecimentos e veja o quanto você evoluiu.</p></div><a href="https://mik41708.github.io/tcc/prova.html" target="_blank" rel="noopener">Começar provão</a></article>
+
+    <div class="cards-grid">
+      <article class="resource-card">
+        <span class="tag">Aulas</span>
+        <h3>Vídeos</h3>
+        <p>Assista às resoluções do Enem e acompanhe o raciocínio passo a passo.</p>
+        <a href="#">Resolução 2023</a>
+      </article>
+
+      <article class="resource-card">
+        <span class="tag">Prática</span>
+        <h3>Jogo educacional</h3>
+        <p>Aprenda se divertindo com desafios de química.</p>
+        <a href="#">Começar jogo</a>
+      </article>
+
+      <article class="resource-card">
+        <span class="tag">Experimentos</span>
+        <h3>PhET</h3>
+        <p>Teste experimentos práticos e observe os conceitos em ação.</p>
+        <a href="#">Entrar no PhET</a>
+      </article>
+
+      <article class="resource-card">
+        <span class="tag">Eletroquímica</span>
+        <h3>Bond Breaker 2.0</h3>
+        <p>Explore ligações químicas em uma experiência interativa.</p>
+        <a href="#">Entrar</a>
+      </article>
+
+      <article class="resource-card">
+        <span class="tag">Desafio final</span>
+        <h3>Provão</h3>
+        <p>Teste seus conhecimentos e veja o quanto você evoluiu.</p>
+        <a href="#">Começar provão</a>
+      </article>
     </div>
   </section>
-
-  <div class="modal-backdrop" id="accountModal">
-    <div class="modal">
-      <div class="modal-header"><div><h2 id="accountTitle">Entrar</h2><p class="modal-subtitle" id="accountSubtitle">Acesse seu espaço de estudos.</p></div><button class="modal-close" type="button" data-close="accountModal">×</button></div>
-      <form class="account-form" id="accountForm">
-        <label id="nameField" hidden>Nome<input type="text" id="accountName"></label>
-        <label>E-mail<input type="email" id="accountEmail" placeholder="voce@email.com" required></label>
-        <label>Senha<input type="password" id="accountPassword" placeholder="Digite sua senha" required></label>
-        <button type="submit" id="accountSubmit">Entrar</button>
-        <div class="account-status" id="accountStatus" role="status" aria-live="polite"></div>
-        <p>Ainda não tem cadastro? <button class="modal-switch" type="button" id="switchAccount">Criar cadastro</button></p>
-      </form>
-    </div>
-  </div>
-
-  <div class="modal-backdrop" id="profileModal">
-    <div class="modal"><div class="modal-header"><h2>Perfil</h2><button class="modal-close" type="button" data-close="profileModal">×</button></div><div class="profile-panel"><span class="profile-avatar" id="profileAvatar">Q</span><strong id="profileName">Visitante</strong><form class="profile-name-form" id="profileNameForm"><input type="text" id="profileNameInput" placeholder="Novo nome" aria-label="Novo nome" required><button type="submit">Salvar</button></form><label class="upload-label">Baixar imagem do computador<input type="file" id="profileImage" accept="image/*"></label><button class="modal-switch" type="button" id="logoutButton">Sair da conta</button></div></div>
-  </div>
 
   <footer class="site-footer">
-    <div class="footer-copy">
-      <p class="footer-title">Site de ensino sobre química - criado pelos BGS.</p>
-      <p class="footer-help">Se tiver com algum problema no site, no jogo educacional ou no provão entre em contato com nossos integrantes.</p>
-    </div>
-    <nav class="social-links" aria-label="Redes sociais">
-      <a href="#" id="whatsappButton" aria-label="Abrir contatos do WhatsApp" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
-    </nav>
+    <p class="footer-title">Plataforma de Estudos de Química 3D</p>
+    <p>Projeto focado em acessibilidade e aprendizado dinâmico.</p>
   </footer>
 
-  <section class="reader-panel" id="readerPanel" aria-labelledby="readerTitle">
-    <h2 id="readerTitle">Leitura do site</h2>
-    <p>Use os controles para ouvir o conteúdo principal da página.<span class="reader-language" id="readerLanguage">Idioma: Português</span></p>
-    <div class="reader-actions">
-      <button id="readStart" type="button">Ler site</button>
-      <button id="readPause" type="button">Pausar</button>
-      <button id="readResume" type="button">Continuar</button>
-      <button id="readStop" type="button">Parar</button>
+  <button id="readerButton" class="reader-btn" aria-expanded="false">🔊</button>
+  <div id="readerPanel" class="reader-panel">
+    <p id="readerLanguage">Idioma: Português</p>
+    <div class="reader-controls">
+      <button id="readStart">Ouvir</button>
+      <button id="readPause">Pausar</button>
+      <button id="readResume">Continuar</button>
+      <button id="readStop">Parar</button>
     </div>
-    <audio class="reader-audio" id="readerAudio" controls preload="none" aria-label="Áudio da leitura"></audio>
-  </section>
+    <audio id="readerAudio" style="display: none;"></audio>
+  </div>
 
-  <div vw class="enabled"><div vw-access-button class="active"></div><div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div></div>
-
-  <div class="modal-backdrop" id="whatsappModal">
+  <div id="accountModal" class="modal-backdrop">
     <div class="modal">
-      <div class="modal-header"><h2>Fale conosco</h2><button class="modal-close" type="button" data-close="whatsappModal">×</button></div>
-      <div class="whatsapp-contacts">
-        <div class="whatsapp-contact"><div><strong>Criador do site e do provão</strong><span>+55 (15) 99638-3464</span></div><a href="https://wa.me/5515996383464" target="_blank" rel="noopener">Conversar</a></div>
-        <div class="whatsapp-contact"><div><strong>Criador do jogo educacional</strong><span>+55 (15) 99600-7040</span></div><a href="https://wa.me/5515996007040" target="_blank" rel="noopener">Conversar</a></div>
-      </div>
+      <button class="modal-close" data-close="accountModal">&times;</button>
+      <h2 id="accountTitle">Cadastro</h2>
+      <p id="accountSubtitle" class="modal-subtitle">Crie sua conta para acompanhar seus estudos.</p>
+      <form id="accountForm" class="account-form">
+        <label id="nameField">Nome: <input type="text" id="accountName"></label>
+        <label>E-mail: <input type="email" id="accountEmail" required></label>
+        <label>Senha: <input type="password" id="accountPassword" required></label>
+        <button type="submit" id="accountSubmit">Cadastrar</button>
+        <p>Ainda não tem cadastro? <button type="button" id="switchAccount" class="btn-inline">Criar cadastro</button></p>
+      </form>
+      <p id="accountStatus"></p>
     </div>
   </div>
 
+  <div id="profileModal" class="modal-backdrop">
+    <div class="modal">
+      <button class="modal-close" data-close="profileModal">&times;</button>
+      <h2>Perfil</h2>
+      <div id="profileAvatar" class="avatar large">V</div>
+      <p id="profileName">Visitante</p>
+      <form id="profileNameForm" class="profile-name-form">
+        <input type="text" id="profileNameInput" placeholder="Seu nome">
+        <button type="submit">Salvar</button>
+      </form>
+      <label class="upload-label">
+        Baixar imagem do computador
+        <input type="file" id="profileImage" accept="image/*" hidden>
+      </label>
+      <button id="logoutButton" class="btn-danger">Sair da conta</button>
+    </div>
+  </div>
+
+  <div id="whatsappModal" class="modal-backdrop">
+    <div class="modal">
+      <button class="modal-close" data-close="whatsappModal">&times;</button>
+      <h2>Atendimento</h2>
+      <p>Dúvidas? Entre em contato conosco pelo suporte.</p>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
