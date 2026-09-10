@@ -898,33 +898,6 @@
     const savedTheme = localStorage.getItem('quimica-theme') || 'dark';
     document.documentElement.dataset.theme = savedTheme;
     document.getElementById('themeButton').textContent = savedTheme === 'light' ? 'Modo escuro' : 'Modo claro';
-
-    // --- CONTROLE DE TAMANHO DE FONTE ---
-    const textSizes = [
-      { id: 'normal', label: 'Texto 100%' },
-      { id: 'large', label: 'Texto 112%' },
-      { id: 'xlarge', label: 'Texto 125%' }
-    ];
-    let currentTextSize = localStorage.getItem('quimica-text-size') || 'normal';
-    function applyTextSize(size) {
-      currentTextSize = size;
-      document.documentElement.dataset.textSize = size === 'normal' ? '' : size;
-      const selectedSize = textSizes.find((s) => s.id === size) || textSizes[0];
-      const textSizeBtn = document.getElementById('textSizeButton');
-      if (textSizeBtn) {
-        textSizeBtn.textContent = selectedSize.label;
-      }
-      localStorage.setItem('quimica-text-size', size);
-    }
-    const textSizeBtn = document.getElementById('textSizeButton');
-    if (textSizeBtn) {
-      textSizeBtn.addEventListener('click', () => {
-        const currentIndex = textSizes.findIndex((s) => s.id === currentTextSize);
-        applyTextSize(textSizes[(currentIndex + 1) % textSizes.length].id);
-      });
-    }
-    applyTextSize(currentTextSize);
-
     const languages = ['PT', 'EN', '中文', 'ES'];
     const colorModes = [
       { id: 'standard', label: 'Cores' },
