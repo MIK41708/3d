@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Química - ENEM & Vestibulares</title>
+    <link rel="stylesheet" href="acessibilidade.css">
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --correct-color: #2ecc71;
+            --wrong-color: #e74c3c;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            max-width: 800px;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: #666;
+            margin-top: 0;
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .question-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--accent-color);
+        }
+
+        .meta-info {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        .topic-badge {
+            background-color: #e0e6ed;
+            color: var(--primary-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .question-text {
+            font-size: 1.05em;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            white-space: pre-line;
+        }
+
+        /* ESTILO PARA A IMAGEM DA QUESTÃO */
+        .question-image {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 15px 0 20px 0;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: #f8f9fa;
+            border: 1px solid #dcdde1;
+            border-radius: 6px;
+            padding: 14px 18px;
+            text-align: left;
+            font-size: 0.98em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: flex-start;
+            line-height: 1.4;
+        }
+
+        .option-btn:hover {
+            background-color: #f1f2f6;
+            border-color: #a4b0be;
+        }
+
+        .option-btn.selected-correct {
+            background-color: #d4edda !important;
+            border-color: var(--correct-color) !important;
+            color: #155724;
+            font-weight: 600;
+        }
+
+        .option-btn.selected-wrong {
+            background-color: #f8d7da !important;
+            border-color: var(--wrong-color) !important;
+            color: #721c24;
+        }
+
+        .option-btn.reveal-correct {
+            background-color: #d4edda !important;
+            border-color: var(--correct-color) !important;
+            color: #155724;
+        }
+
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            font-weight: bold;
+            display: none;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .feedback.correct {
+            display: block;
+            color: var(--correct-color);
+        }
+
+        .feedback.wrong {
+            display: block;
+            color: var(--wrong-color);
+        }
+
+        #result-card {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            display: none;
+        }
+
+        #result-card h2 {
+            margin-top: 0;
+        }
+
+        .score-text {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .action-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1em;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+            margin-top: 15px;
+        }
+
+        .action-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Quiz Interativo de Química</h1>
+        <p>Pratica com questões reais extraídas fielmente dos exames do ENEM e Vestibulares.</p>
+    </header>
+
+    <div class="quiz-container" id="quiz-box"></div>
+
+    <div class="quiz-container">
+        <button class="action-btn" id="submit-all-btn" onclick="finishQuiz()">Finalizar Quiz e Ver Resultado</button>
+        
+        <div id="result-card">
+            <h2>Resultados do Quiz</h2>
+            <div class="score-text" id="score-display">Acertaste 0 de 0 questões!</div>
+            <p id="performance-feedback"></p>
+            <button class="action-btn" style="background-color: #27ae60;" onclick="window.location.reload()">Refazer Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const questionsData = [
+            {
+                meta: "Enem / 2015",
+                topic: "Química Básica - Separação de misturas",
+                text: "Um grupo de pesquisadores desenvolveu um método simples, barato e eficaz de remoção de petróleo contaminante na água, que utiliza um plástico produzido a partir do líquido da castanha-de-caju (LCC). A composição química do LCC é muito parecida com a do petróleo e suas moléculas, por suas características, interagem formando agregados com o petróleo. Para retirar os agregados da água, os pesquisadores misturam ao LCC nanopartículas magnéticas.\n\nEssa técnica considera dois processos de separação de misturas, sendo eles, respectivamente:",
+                options: [
+                    "a) flotação e decantação.",
+                    "b) decomposição e centrifugação.",
+                    "c) floculação e separação magnética.",
+                    "d) destilação fracionada e peneiração.",
+                    "e) dissolução fracionada e magnetização."
+                ],
+                answer: 2
+            },
+            {
+                meta: "Ano: 2021 | Banca: INEP | Órgão: ENEM",
+                topic: "Química Básica - Separação de misturas",
+                text: "Entre os materiais mais usados no nosso dia a dia destacam-se os plásticos, constituídos por polímeros. A consequência de seu amplo uso é a geração de resíduos, que necessitam de um destino final adequado em termos ambientais. Uma das alternativas tem sido a reciclagem, que deve respeitar as características dos polímeros que compõem o material. Esse processo envolve algumas etapas, como: separação do resíduo (catação), moagem, hidrólise, lavagem, secagem, pirólise e aquecimento (fusão).\n\nQuais das etapas citadas do processo de reciclagem são classificadas como métodos químicos?",
+                options: [
+                    "a) Hidrólise e pirólise",
+                    "b) Secagem e pirólise",
+                    "c) Moagem e lavagem",
+                    "d) Separação e hidrólise",
+                    "e) Secagem e aquecimento"
+                ],
+                answer: 0
+            },
+            {
+                meta: "Ano: 2023 | Banca: INEP | Órgão: ENEM",
+                topic: "Química Básica - Separação de misturas",
+                text: "O vidro contendo alumínio em sua composição é um excelente material para acondicionar medicamentos e suplementos, porque pode ser esterilizado por aquecimento. No entanto, quando o medicamento ou suplemento contém substâncias que se ligam fortemente ao íon desse metal, a dissolução do alumínio é promovida em função do deslocamento do equilíbrio químico estabelecido entre a espécie imobilizada no vidro e a espécie em solução. Por essa razão, recomenda-se que suplementos de nutrição de recém-nascidos contendo gluconato de cálcio sejam acondicionados em embalagens plásticas, e não nesse tipo de vidro.\n\nCaso esse suplemento seja acondicionado em embalagem desse tipo de vidro, o risco de contaminação por alumínio será maior se o(a):",
+                options: [
+                    "a) vidro do frasco for translúcido.",
+                    "b) concentração de gluconato de cálcio for alta.",
+                    "c) frasco de vidro apresentar uma maior espessura.",
+                    "d) vidro for previamente esterilizado em altas temperaturas.",
+                    "e) reação do alumínio com gluconato de cálcio for endotérmica."
+                ],
+                answer: 1
+            },
+            {
+                meta: "Ano: 2017 | Banca: INEP | Órgão: ENEM",
+                topic: "Química Básica - Separação de misturas",
+                text: "As centrífugas são equipamentos utilizados em laboratórios, clínicas e indústrias. Seu funcionamento faz uso da aceleração centrífuga obtida pela rotação de um recipiente e que serve para a separação de sólidos em suspensão em líquidos ou de líquidos misturados entre si.\n\nNesse aparelho, a separação das substâncias ocorre em função:",
+                options: [
+                    "a) das diferentes densidades.",
+                    "b) dos diferentes raios de rotação.",
+                    "c) das diferentes velocidades angulares.",
+                    "d) das diferentes quantidades de cada substância.",
+                    "e) da diferente coesão molecular de cada substância."
+                ],
+                answer: 0
+            },
+            {
+                meta: "Ano: 2016 | Banca: INEP | Órgão: ENEM",
+                topic: "Química Básica - Forças Intermoleculares",
+                text: "O carvão ativado é um material que possui elevado teor de carbono, sendo muito utilizado para a remoção de compostos orgânicos voláteis do meio, como o benzeno. Para a remoção desses compostos, utiliza-se a adsorção. Esse fenômeno ocorre por meio de interações do tipo intermoleculares entre a superfície do carvão (adsorvente) e o benzeno (adsorvato, substância adsorvida).\n\nNo caso apresentado, entre o adsorvente e a substância adsorvida, ocorre a formação de:",
+                options: [
+                    "a) ligações dissulfeto",
+                    "b) ligações covalentes",
+                    "c) ligações de hidrogênio",
+                    "d) interações dipolo induzido-dipolo induzido",
+                    "e) interações dipolo permanente-dipolo permanente"
+                ],
+                answer: 3
+            },
+            {
+                meta: "Ano: 2022 | Banca: INEP | Órgão: ENEM PPL",
+                topic: "Química Básica - Forças Intermoleculares",
+                text: "Bebidas alcoólicas, algumas soluções desinfetantes ou até álcool combustível são exemplos de misturas constituídas por etanol (CH3CH2OH) e água. A \"afinidade\" entre esses líquidos é suficiente para possibilitar que a mistura formada por 500 mL de água e 500 mL de etanol origine uma solução de 970 mL, em um processo que envolve liberação de pequena quantidade de energia. De certa forma, isso constitui um problema para os fabricantes, uma vez que, para obterem um litro dessa mistura, necessitariam misturar mais do que 500 mL de cada um dos líquidos.\n\nDo ponto de vista da química, a que se deve essa variação de volume?",
+                options: [
+                    "a) À redução do volume das moléculas.",
+                    "b) Ao abaixamento da massa molecular.",
+                    "c) À formação de ligações covalentes mais fortes.",
+                    "d) À diminuição do grau de agitação das moléculas.",
+                    "e) Ao estabelecimento de interações intermoleculares mais intensas."
+                ],
+                answer: 4
+            },
+            {
+                meta: "Ano: 2017 | Banca: INEP | Órgão: ENEM",
+                topic: "Química Básica - Polaridade",
+                text: "Na Idade Média, para elaborar preparados a partir de plantas produtoras de óleos essenciais, as coletas das espécies eram realizadas ao raiar do dia. Naquela época, essa prática era fundamentada misticamente pelo efeito mágico dos raios lunares, que seria anulado pela emissão dos raios solares. Com a evolução da ciência, foi comprovado que a coleta de algumas espécies ao raiar do dia garante a obtenção de material com maiores quantidades de óleos essenciais.\n\nA explicação científica que justifica essa prática se baseia na:",
+                options: [
+                    "a) volatilização das substâncias de interesse.",
+                    "b) polimerização dos óleos catalisada pela radiação solar.",
+                    "c) solubilização das substâncias de interesse pelo orvalho.",
+                    "d) oxidação do óleo pelo oxigênio produzido na fotossíntese.",
+                    "e) liberação das moléculas de óleo durante o processo de fotossíntese."
+                ],
+                answer: 0
+            },
+            {
+                meta: "Ano: 2015 | Banca: INEP | Órgão: ENEM",
+                topic: "Química Básica - Polaridade",
+                text: "Pesticidas são substâncias utilizadas para promover o controle de pragas. No entanto, após sua aplicação em ambientes abertos, alguns pesticidas organoclorados são arrastados pela água até lagos e rios e, ao passar pelas guelras dos peixes, podem difundir-se para seus tecidos lipídicos e lá se acumularem.\n\nA característica desses compostos, responsável pelo processo descrito no texto, é o(a):",
+                options: [
+                    "a) baixa polaridade.",
+                    "b) baixa massa molecular.",
+                    "c) ocorrência de halogênios.",
+                    "d) tamanho pequeno das moléculas.",
+                    "e) presença de hidroxilas nas cadeias."
+                ],
+                answer: 0
+            },
+            {
+                meta: "Ano: 2017 | Banca: INEP | Órgão: ENEM",
+                topic: "Química Básica - Polaridade",
+                text: "Partículas microscópicas existentes na atmosfera funcionam como núcleos de condensação de vapor de água que, sob condições adequadas de temperatura e pressão, propiciam a formação das nuvens e consequentemente das chuvas. No ar atmosférico, tais partículas são formadas pela reação de ácidos (HX) com a base NH3, de forma natural ou antropogênica, dando origem a sais de amônio (NH4X), de acordo com a equação química genérica:\n\nHX (g) + NH3 (g) → NH4X (s)\n\nA fixação de moléculas de vapor de água pelos núcleos de condensação ocorre por:",
+                options: [
+                    "a) ligações iônicas.",
+                    "b) interações dipolo-dipolo.",
+                    "c) interações dipolo-dipolo induzido.",
+                    "d) interações íon-dipolo.",
+                    "e) ligações covalentes."
+                ],
+                answer: 3
+            },
+            {
+                meta: "Ano: 2022 | Banca: INEP | Órgão: ENEM PPL",
+                topic: "Química Básica - Ligações Químicas",
+                text: "Os compostos iônicos CaCO3 e NaCl têm solubilidades muito diferentes em água. Enquanto o carbonato de cálcio, principal constituinte do mármore, é praticamente insolúvel em água, o sal de cozinha é muito solúvel. A solubilidade de qualquer sal é o resultado do balanço entre a energia de rede (energia necessária para separar completamente os íons do sólido cristalino) e a energia envolvida na hidratação dos íons dispersos em solução.\n\nEm relação à energia de rede, a menor solubilidade do primeiro composto é explicada pelo fato de ele apresentar maior:",
+                options: [
+                    "a) atração entre seus íons.",
+                    "b) densidade do sólido iônico.",
+                    "c) energia de ionização do cálcio.",
+                    "d) eletronegatividade dos átomos.",
+                    "e) polarizabilidade do íon carbonato."
+                ],
+                answer: 0
+            },
+            {
+                meta: "Ano: 2018 | Banca: INEP | Órgão: ENEM",
+                topic: "Química Básica - Ligações Químicas",
+                text: "O manejo adequado do solo possibilita a manutenção de sua fertilidade à medida que as trocas de nutrientes entre matéria orgânica, água, solo e o ar são mantidas para garantir a produção. Algumas espécies iônicas de alumínio são tóxicas, não só para a planta, mas para muitos organismos como as bactérias responsáveis pelas transformações no ciclo do nitrogênio. O alumínio danifica as membranas das células das raízes e restringe a expansão de suas paredes, com isso, a planta não cresce adequadamente. Para promover benefícios para a produção agrícola, é recomendada a remediação do solo utilizando calcário (CaCO3).\n\nEssa remediação promove no solo o(a):",
+                options: [
+                    "a) diminuição do pH, deixando-o fértil.",
+                    "b) solubilização do alumínio, ocorrendo sua lixiviação pela chuva.",
+                    "c) interação do íon cálcio com o íon alumínio, produzindo uma liga metálica.",
+                    "d) reação do carbonato de cálcio com os íons alumínio, formando alumínio metálico.",
+                    "e) aumento da sua alcalinidade, tornando os íons alumínio menos disponíveis."
+                ],
+                answer: 4
+            },
+            {
+                meta: "Ano: 2024 | Banca: INEP | Órgão: ENEM",
+                topic: "Química Básica - Propriedades da Matéria",
+                text: "A dimetilamina é uma substância de elevada toxidez que entra em ebulição a 7 °C. Na madrugada de um dia frio, essa substância se espalhou por uma rodovia após um acidente de trânsito envolvendo um caminhão que transportava esse produto. Para minimizar a agressão ao meio ambiente, bem como evitar a evaporação da dimetilamina com a elevação da temperatura ao longo do dia, um químico considerou o uso de algumas substâncias ou misturas como água, vinagre, óleo de soja, sal de cozinha e bicarbonato de sódio.\n\nDentre as opções apresentadas, o tratamento correto para minimizar esse problema é usar:",
+                options: [
+                    "a) água.",
+                    "b) vinagre.",
+                    "c) óleo de soja.",
+                    "d) sal de cozinha.",
+                    "e) bicarbonato de sódio."
+                ],
+                answer: 1
+            },
+            {
+                meta: "Ano: - | Banca: INEP | Órgão: ENEM",
+                topic: "Química Básica - Propriedades da Matéria",
+                text: "Ainda hoje, é muito comum as pessoas utilizarem vasilhames de barro (moringas ou potes de cerâmica não esmaltada) para conservar água a uma temperatura menor do que a do ambiente.\n\nIsso ocorre porque:",
+                options: [
+                    "a) o barro isola a água do ambiente, mantendo-a sempre a uma temperatura menor que a dele, como se fosse isopor.",
+                    "b) o barro tem poder de \"gelar\" a água pela sua composição química. Na reação, a água perde calor.",
+                    "c) o barro é poroso, permitindo que a água passe através dele. Parte dessa água evapora, tomando calor da moringa e do restante da água, que são assim resfriadas.",
+                    "d) o barro é poroso, permitindo que a água se deposite na parte de fora da moringa. A água de fora sempre está a uma temperatura maior que a de dentro.",
+                    "e) a moringa é uma espécie de geladeira natural, liberando substâncias higroscópicas que diminuem naturally a temperatura da água."
+                ],
+                answer: 2
+            },
+            {
+                meta: "Ano: 2023 | Banca: INEP | Órgão: ENEM PPL",
+                topic: "Química Básica - Propriedades da Matéria",
+                text: "Um dos materiais mais antigos e ainda utilizados na restauração dos dentes são as amálgamas, um produto da combinação de mercúrio (Hg) com prata (Ag) e estanho (Sn), como apresenta a equação química:\n\n24 Ag(s) + 8 Sn(s) + 37 Hg(l) → 12 Ag2Hg3(s) + Sn8Hg(s)\n\nOs materiais formados pelos elementos citados são caracterizados como:",
+                options: [
+                    "a) precipitados.",
+                    "b) ligas metálicas.",
+                    "c) compostos iônicos.",
+                    "d) produtos de oxidação.",
+                    "e) compostos covalentes."
+                ],
+                answer: 1
+            },
+            {
+                meta: "Ano: 2024 | Banca: INEP | Órgão: ENEM PPL",
+                topic: "Físico-Química - Estequiometria",
+                text: "O titânio é encontrado na natureza em minerais, dos quais o rutilo (TiO2) está presente na principal mina do Brasil, localizada no Rio Grande do Norte. Para obtenção do titânio metálico, o TiO2 é submetido a duas operações industriais.\nA primeira consiste na cloração, produzindo tetracloreto de titânio, conforme a equação:\n\nTiO2 + 2 Cl2 + 2 C → TiCl4 + 2 CO\n\nA segunda operação consiste na redução do tetracloreto de titânio, utilizando magnésio metálico:\n\n2 Mg + TiCl4 → 2 MgCl2 + Ti\n\nConsidere as massas molares: Cl = 35,5 g/mol; Ti = 48 g/mol.\n\nQual a massa de gás cloro necessária para produzir 480 kg de titânio metálico?",
+                options: [
+                    "a) 179 kg",
+                    "b) 359 kg",
+                    "c) 480 kg",
+                    "d) 710 kg",
+                    "e) 1420 kg"
+                ],
+                answer: 4
+            },
+            {
+                meta: "Ano: 2024 | Banca: INEP | Órgão: ENEM",
+                topic: "Físico-Química - Estequiometria",
+                text: "O biogás é uma alternativa energética muito importante, pois, além de reduzir a dependência por combustíveis fósseis, sua obtenção pode ser realizada a partir de resíduos da produção agroindustrial. Considere que o biogás produzido em um empreendimento de suinocultura contém 70% em volume de metano (massa molar 16 g/mol; volume molar 22 L/mol). Ele será utilizado para geração de energia em substituição ao etanol (massa molar 46 g/mol) em um gerador no qual 1 m³ de biogás de origem suína substitui 0,59 L de etanol anidro (densidade 0,78 g/mL).\n\nNessas condições, a massa de metano necessária para substituir 10 mol de etanol na produção de energia é mais próxima de:",
+                options: [
+                    "a) 300 g.",
+                    "b) 400 g.",
+                    "c) 510 g.",
+                    "d) 590 g.",
+                    "e) 720 g."
+                ],
+                answer: 2
+            },
+            {
+                meta: "Ano: 2024 | Banca: INEP | Órgão: ENEM",
+                topic: "Físico-Química - Soluções",
+                text: "O soro caseiro serve para combater a desidratação por meio da reposição da água e sais minerais perdidos, por exemplo, por diarreia. Uma receita simples para a sua preparação consiste em utilizar duas colheres grandes (de sopa) de açúcar e duas colheres pequenas (de café) de sal de cozinha, dissolvidos em 2 L de água fervida, obtendo-se uma solução com concentração de íon sódio de 1,4 mg/mL.\n\nConsidere as massas molares: NaCl = 58,5 g/mol; Na = 23 g/mol.\n\nQual é o valor mais próximo da massa, em grama, de cloreto de sódio presente em uma única colher pequena?",
+                options: [
+                    "a) 0,7 g",
+                    "b) 1,8 g",
+                    "c) 2,8 g",
+                    "d) 3,6 g",
+                    "e) 7,0 g"
+                ],
+                answer: 3
+            },
+            {
+                meta: "Ano: 2022 | Banca: INEP | Órgão: ENEM",
+                topic: "Físico-Química - Eletroquímica",
+                text: "A nanotecnologia é responsável pelo aprimoramento de diversos materiais, incluindo os que são impactados com a presença de poluentes e da umidade na atmosfera, causadores de corrosão. O processo de corrosão é espontâneo e provoca a deterioração de metais como o ferro, que, em presença de oxigênio e água, sofre oxidação, conforme ilustra a equação química:\n\n4 Fe(s) + 2 H2O(l) + 3 O2(g) → 2 Fe2O3·H2O(s)\n\nUma forma de garantir a durabilidade da estrutura metálica e a sua resistência à umidade consiste na deposição de filmes finos nanocerâmicos à base de zircônia (ZrO2) e alumina (Al2O3) sobre a superfície do objeto que se deseja proteger.\n\nEssa nanotecnologia applied na proteção contra a corrosão se baseia no(a):",
+                options: [
+                    "a) proteção catódica, que utiliza um metal fortemente redutor.",
+                    "b) uso de metais de sacrifício, que se oxidam no lugar do ferro.",
+                    "c) passivação do ferro, que fica revestido pelo seu próprio óxido.",
+                    "d) efeito de barreira, que impede o contato com o agente oxidante.",
+                    "e) galvanização, que usa outros metais de menor potencial de redução."
+                ],
+                answer: 3
+            },
+            {
+                meta: "Ano: 2019 | Banca: INEP | Órgão: ENEM PPL",
+                topic: "Físico-Química - Termoquímica",
+                text: "O etanol é um combustível renovável obtido da cana-de-açúcar e é menos poluente do que os combustíveis fósseis, como a gasolina e o diesel. O etanol tem densidade 0,8 g/cm³, massa molar 46 g/mol e calor de combustão aproximado de -1 300 kJ/mol. Com o grande aumento da frota de veículos, tem sido incentivada a produção de carros bicombustíveis econômicos, que são capazes de render até 20 km/L em rodovias, para diminuir a emissão de poluentes atmosféricos.\n\nO valor correspondente à energia consumida para que o motorista de um carro econômico, movido a álcool, percorra 400 km na condição de máximo rendimento é mais próximo de:",
+                options: [
+                    "a) 565 kJ.",
+                    "b) 452 kJ.",
+                    "c) 520 kJ.",
+                    "d) 390 kJ.",
+                    "e) 348 kJ."
+                ],
+                answer: 1
+            },
+            {
+                meta: "Ano: 2020 | Banca: INEP | Órgão: ENEM",
+                topic: "Físico-Química - Cinética Química",
+                text: "A nanotecnologia pode ser caracterizada quando os compostos estão na ordem de milionésimos de milímetros, como na utilização de nanomateriais catalíticos nos processos industriais. O uso desses materiais aumenta a eficiência da produção, consome menos energia e gera menores quantidades de resíduos. O sucesso dessa aplicação tecnológica muitas vezes está relacionado ao aumento da velocidade da reação química envolvida.\n\nO êxito da aplicação dessa tecnologia é por causa da realização de reações químicas que ocorrem em condições de:",
+                options: [
+                    "a) alta pressão.",
+                    "b) alta temperatura.",
+                    "c) excesso de reagentes.",
+                    "d) maior superfície de contato.",
+                    "e) elevada energia de ativação."
+                ],
+                answer: 3
+            },
+            {
+                meta: "Ano: 2018 | Banca: INEP | Órgão: ENEM",
+                topic: "Química Orgânica - Funções Orgânicas",
+                text: "As abelhas utilizam a sinalização química para distinguir a abelha-rainha de uma operária, sendo capazes de reconhecer diferenças entre moléculas. A rainha produz o sinalizador químico conhecido como ácido 9-hidroxidec-2-enoico, enquanto as abelhas-operárias produzem ácido 10-hidroxidec-2-enoico. Nós podemos distinguir as abelhas-operárias e rainhas por sua aparência, mas, entre si, elas usam essa sinalização química para perceber a diferença. Pode-se dizer que veem por meio da química.\n\nAs moléculas dos sinalizadores químicos produzidas pelas abelhas rainha e operária possuem diferença na:",
+                options: [
+                    "a) fórmula estrutural.",
+                    "b) fórmula molecular.",
+                    "c) identificação dos tipos de ligação.",
+                    "d) contagem do número de carbonos.",
+                    "e) identificação da função química."
+                ],
+                answer: 0
+            },
+            {
+                meta: "Ano: 2021 | Banca: INEP | Órgão: ENEM PPL",
+                topic: "Química Orgânica - Reações Orgânicas",
+                text: "A simples atitude de não jogar direto no lixo ou no ralo da pia o óleo de cozinha usado pode contribuir para a redução da poluição ambiental. Mas o que fazer com o óleo vegetal que não será mais usado? Não existe um modelo ideal de descarte, mas uma alternativa simples tem sido reaproveitá-lo para fazer sabão. Para isso, são necessários, além do próprio óleo, água e soda cáustica.\n\nCom base no texto, a reação química que permite o reaproveitamento do óleo vegetal é denominada:",
+                options: [
+                    "a) redução.",
+                    "b) epoxidação.",
+                    "c) substituição.",
+                    "d) esterificação.",
+                    "e) saponificação."
+                ],
+                answer: 4
+            },
+            {
+                meta: "Ano: 2025 | Banca: VUNESP | Órgão: UNIFIPA",
+                topic: "Físico-Química - Eletroquímica",
+                text: "Baterias de lítio-cloreto de tionila (Li-SOCl2) são muito utilizadas na alimentação de equipamentos militares e aeroespaciais, devido à alta densidade de energia e de potência que elas fornecem. Operam uma faixa de temperatura bastante grande, de –54 °C a 120 °C sem perda de suas propriedades e garantem uma das maiores ddp para esse tipo de dispositivo.\n\nCom base nos potenciais de redução fornecidos, o elemento que sofre oxidação e o valor da diferença de potencial fornecida por uma bateria de lítio-cloreto de tionila são, respectivamente:",
+                options: [
+                    "A) S e 3,60 V.",
+                    "B) Li e 5,25 V.",
+                    "C) Li e 2,5 V.",
+                    "D) S e 5,25 V.",
+                    "E) Li e 3,60 V."
+                ],
+                answer: 4
+            },
+            {
+                meta: "Ano: 2025 | Banca: VUNESP | Órgão: UNIFIPA",
+                topic: "Físico-Química - Equilíbrio Químico",
+                text: "O lançamento de esgotos em corpos d’água pode provocar variação na quantidade de oxigênio dissolvido na água dependendo do pH e da temperatura do sistema. A presença de íons H+ e oxigênio molecular na água provoca o estabelecimento do equilíbrio.\n\nUma indústria de alimentos, ao monitorar o esgoto que seria lançado em um rio, verificou que a concentração dos íons H+ nesse esgoto estava muito elevada, o que produziria a diminuição do oxigênio dissolvido na água do rio para valores abaixo dos permitidos pela legislação, indicando a necessidade de uma ação corretiva para o controle da acidez do esgoto.\n\nNessa situação, uma substância que pode ser adicionada ao esgoto para garantir que a concentração dos íons H+ se mantenha dentro dos limites permitidos pela legislação é:",
+                options: [
+                    "A) Na2SO4",
+                    "B) NH4Cl",
+                    "C) NaHCO3",
+                    "D) NaCl",
+                    "E) (NH4)2SO4"
+                ],
+                answer: 2
+            }
+        ];
+
+        const userAnswers = {};
+
+        function loadQuiz() {
+            const quizBox = document.getElementById('quiz-box');
+            quizBox.innerHTML = '';
+
+            questionsData.forEach((q, qIndex) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.id = `q-card-${qIndex}`;
+
+                let imageHTML = '';
+                if (q.image) {
+                    imageHTML = `<img src="${q.image}" class="question-image" alt="Imagem da questão">`;
+                }
+
+                let optionsHTML = '';
+                q.options.forEach((opt, oIndex) => {
+                    optionsHTML += `
+                        <button class="option-btn" id="btn-${qIndex}-${oIndex}" onclick="selectOption(${qIndex}, ${oIndex})">
+                            ${escapeHTML(opt)}
+                        </button>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="meta-info">${q.meta}</div>
+                    <div class="topic-badge">${q.topic}</div>
+                    <div class="question-text">${escapeHTML(q.text)}</div>
+                    ${imageHTML} 
+                    <div class="options-container">
+                        ${optionsHTML}
+                    </div>
+                    <div class="feedback" id="feedback-${qIndex}"></div>
+                `;
+
+                quizBox.appendChild(card);
+            });
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function selectOption(qIndex, oIndex) {
+            const totalOptions = questionsData[qIndex].options.length;
+            for (let i = 0; i < totalOptions; i++) {
+                const btn = document.getElementById(`btn-${qIndex}-${i}`);
+                btn.style.borderColor = '#dcdde1';
+                btn.style.backgroundColor = '#f8f9fa';
+                btn.style.fontWeight = 'normal';
+                btn.style.color = '#333';
+            }
+
+            const selectedBtn = document.getElementById(`btn-${qIndex}-${oIndex}`);
+            selectedBtn.style.borderColor = 'var(--accent-color)';
+            selectedBtn.style.backgroundColor = '#e3f2fd';
+            selectedBtn.style.fontWeight = '600';
+
+            userAnswers[qIndex] = oIndex;
+        }
+
+        function finishQuiz() {
+            let score = 0;
+            const total = questionsData.length;
+
+            questionsData.forEach((q, qIndex) => {
+                const userAns = userAnswers[qIndex];
+                const correctAns = q.answer;
+                const feedbackDiv = document.getElementById(`feedback-${qIndex}`);
+
+                q.options.forEach((_, oIndex) => {
+                    document.getElementById(`btn-${qIndex}-${oIndex}`).disabled = true;
+                });
+
+                if (userAns === undefined) {
+                    feedbackDiv.className = "feedback wrong";
+                    feedbackDiv.innerText = "Questão não respondida! A alternativa correta era a " + String.fromCharCode(65 + correctAns);
+                    document.getElementById(`btn-${qIndex}-${correctAns}`).classList.add('reveal-correct');
+                } else if (userAns === correctAns) {
+                    score++;
+                    feedbackDiv.className = "feedback correct";
+                    feedbackDiv.innerText = "Parabéns! Resposta correta.";
+                    document.getElementById(`btn-${qIndex}-${userAns}`).classList.add('selected-correct');
+                } else {
+                    feedbackDiv.className = "feedback wrong";
+                    feedbackDiv.innerText = "Resposta incorreta! A alternativa certa era a " + String.fromCharCode(65 + correctAns);
+                    document.getElementById(`btn-${qIndex}-${userAns}`).classList.add('selected-wrong');
+                    document.getElementById(`btn-${qIndex}-${correctAns}`).classList.add('reveal-correct');
+                }
+            });
+
+            document.getElementById('submit-all-btn').style.display = 'none';
+            const resultCard = document.getElementById('result-card');
+            resultCard.style.display = 'block';
+
+            document.getElementById('score-display').innerText = `Acertaste ${score} de ${total} questões!`;
+
+            const pct = (score / total) * 100;
+            let msg = "";
+            if (pct === 100) msg = "Incrível! Dominas totalmente a Química! 🎉";
+            else if (pct >= 70) msg = "Muito bem! Tens uma excelente base e estás no caminho certo. 🚀";
+            else if (pct >= 40) msg = "Bom esforço! Vale a pena rever os tópicos errados para consolidar a matéria. 📚";
+            else msg = "Continua a estudar! A química requer prática, revise os conceitos básicos e tente outra vez. 💪";
+            
+            document.getElementById('performance-feedback').innerText = msg;
+            resultCard.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        window.onload = loadQuiz;
+    </script>
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+        </div>
+    </div>
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
+        new window.VLibras.Widget('https://vlibras.gov.br/app');
+    </script>
+</body>
+</html>
