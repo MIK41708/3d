@@ -518,7 +518,7 @@
         <button type="submit" id="accountSubmit">Entrar</button>
         
         <!-- Botão de Entrar com o Google adicionado logo abaixo do botão principal -->
-        <button type="button" class="google-btn" id="googleSubmit">
+        <button type="button" class="google-btn" id="googleLogin">
           <svg viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -1033,6 +1033,48 @@
 
     if (window.VLibras) new window.VLibras.Widget('https://vlibras.gov.br/app');
   </script>
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+  import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup
+  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBdE6L9ZxlsboLGwIvijETKSXlds336QU4",
+    authDomain: "tcc-bgs.firebaseapp.com",
+    projectId: "tcc-bgs",
+    storageBucket: "tcc-bgs.firebasestorage.app",
+    messagingSenderId: "439847454822",
+    appId: "1:439847454822:web:2e214db7f94341d67545a7"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  document.getElementById("googleLogin").addEventListener("click", async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+
+      const user = result.user;
+
+      console.log("Usuário logado:", user);
+      console.log("Nome:", user.displayName);
+      console.log("Email:", user.email);
+      console.log("Foto:", user.photoURL);
+
+      // Exemplo:
+      // window.location.href = "dashboard.html";
+
+    } catch (error) {
+      console.error("Erro ao fazer login com Google:", error);
+
+      alert("Não foi possível entrar com o Google.");
+    }
+  });
+</script>
   <script type="module">
 
   // ==========================================
