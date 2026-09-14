@@ -809,12 +809,7 @@
     });
   </script>
   <script>
-    const accountButton = document.getElementById('accountButton');
-    const accountModal = document.getElementById('accountModal');
-    const profileModal = document.getElementById('profileModal');
-    const accountForm = document.getElementById('accountForm');
-    const storedUser = () => JSON.parse(localStorage.getItem('quimica-user') || 'null');
-    let signUpMode = false;
+
 
     // --- LÓGICA DE TAMANHO DE TEXTO (+A e -A) ---
     const textSizes = ['small', 'normal', 'large', 'xlarge'];
@@ -842,17 +837,7 @@
 
     applyTextSize(currentTextSize);
 
-    function updateProfile() {
-      const user = storedUser();
-      const name = user ? user.name : 'Visitante';
-      document.getElementById('accountLabel').textContent = 'Cadastrar';
-      document.getElementById('profileName').textContent = name;
-      document.getElementById('profileNameInput').value = user ? name : '';
-      const photo = localStorage.getItem('quimica-profile-image');
-      document.querySelectorAll('#headerAvatar, #profileAvatar').forEach((avatar) => {
-        avatar.innerHTML = photo ? `<img src="${photo}" alt="Foto do perfil">` : name.charAt(0).toUpperCase();
-      });
-    }
+  
 
     function openSignup() {
       signUpMode = true;
@@ -884,24 +869,8 @@
       document.getElementById('switchAccount').textContent = signUpMode ? 'Voltar para entrar' : 'Criar cadastro';
       document.getElementById('accountStatus').textContent = '';
     });
-    accountForm.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const email = document.getElementById('accountEmail').value;
-      const name = signUpMode ? document.getElementById('accountName').value || email.split('@')[0] : email.split('@')[0];
-      localStorage.setItem('quimica-user', JSON.stringify({ name, email }));
-      accountModal.classList.remove('open');
-      updateProfile();
-      signUpMode = false;
-      document.getElementById('accountStatus').textContent = 'Conta acessada com sucesso.';
-    });
+  
 
-    // Ação do Botão Google
-    document.getElementById('googleSubmit').addEventListener('click', () => {
-      localStorage.setItem('quimica-user', JSON.stringify({ name: 'Usuário Google', email: 'usuario@gmail.com' }));
-      accountModal.classList.remove('open');
-      updateProfile();
-      document.getElementById('accountStatus').textContent = 'Conectado via Google com sucesso.';
-    });
 
     document.getElementById('profileImage').addEventListener('change', (event) => {
       const file = event.target.files[0];
@@ -918,13 +887,7 @@
       localStorage.setItem('quimica-user', JSON.stringify({ ...user, name }));
       updateProfile();
     });
-    document.getElementById('logoutButton').addEventListener('click', () => { localStorage.removeItem('quimica-user'); localStorage.removeItem('quimica-profile-image'); profileModal.classList.remove('open'); updateProfile(); });
-    document.getElementById('themeButton').addEventListener('click', () => {
-      const light = document.documentElement.dataset.theme === 'light';
-      document.documentElement.dataset.theme = light ? 'dark' : 'light';
-      document.getElementById('themeButton').textContent = light ? 'Modo claro' : 'Modo escuro';
-      localStorage.setItem('quimica-theme', light ? 'dark' : 'light');
-    });
+    
     const savedTheme = localStorage.getItem('quimica-theme') || 'dark';
     document.documentElement.dataset.theme = savedTheme;
     document.getElementById('themeButton').textContent = savedTheme === 'light' ? 'Modo escuro' : 'Modo claro';
@@ -1070,5 +1033,936 @@
 
     if (window.VLibras) new window.VLibras.Widget('https://vlibras.gov.br/app');
   </script>
+  <script type="module">
+
+  // ==========================================
+  // FIREBASE
+  // ==========================================
+
+  import { initializeApp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithPopup,
+    signOut,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+  // ==========================================
+  // CONFIGURAÇÃO DO SEU FIREBASE
+  // ==========================================
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBdE6L9ZxlsboLGwIvijETKSXlds336QU4",
+  authDomain: "tcc-bgs.firebaseapp.com",
+  projectId: "tcc-bgs",
+  storageBucket: "tcc-bgs.firebasestorage.app",
+  messagingSenderId: "439847454822",
+  appId: "1:439847454822:web:2e214db7f94341d67545a7"
+};
+
+
+  // ==========================================
+  // INICIALIZA FIREBASE
+  // ==========================================
+
+  const app = initializeApp(firebaseConfig);
+
+  const auth = getAuth(app);
+
+  const db = getFirestore(app);
+
+  const googleProvider = new GoogleAuthProvider();
+
+
+  // ==========================================
+  // ELEMENTOS
+  // ==========================================
+
+  const accountButton =
+    document.getElementById("accountButton");
+
+  const accountModal =
+    document.getElementById("accountModal");
+
+  const profileModal =
+    document.getElementById("profileModal");
+
+  const accountForm =
+    document.getElementById("accountForm");
+
+  const accountStatus =
+    document.getElementById("accountStatus");
+
+  const accountTitle =
+    document.getElementById("accountTitle");
+
+  const accountSubtitle =
+    document.getElementById("accountSubtitle");
+
+  const accountSubmit =
+    document.getElementById("accountSubmit");
+
+  const googleSubmit =
+    document.getElementById("googleSubmit");
+
+  const googleButtonText =
+    document.getElementById("googleButtonText");
+
+  const switchAccount =
+    document.getElementById("switchAccount");
+
+  const nameField =
+    document.getElementById("nameField");
+
+  const accountName =
+    document.getElementById("accountName");
+
+  const accountEmail =
+    document.getElementById("accountEmail");
+
+  const accountPassword =
+    document.getElementById("accountPassword");
+
+  const accountLabel =
+    document.getElementById("accountLabel");
+
+  const profileName =
+    document.getElementById("profileName");
+
+  const profileNameInput =
+    document.getElementById("profileNameInput");
+
+  const profileNameForm =
+    document.getElementById("profileNameForm");
+
+  const logoutButton =
+    document.getElementById("logoutButton");
+
+  const headerAvatar =
+    document.getElementById("headerAvatar");
+
+  const profileAvatar =
+    document.getElementById("profileAvatar");
+
+
+  // ==========================================
+  // MODO LOGIN / CADASTRO
+  // ==========================================
+
+  let signUpMode = false;
+
+
+  function mostrarStatus(mensagem, erro = false) {
+
+    accountStatus.textContent = mensagem;
+
+    accountStatus.style.color =
+      erro ? "#ff6b6b" : "var(--accent-cyan)";
+  }
+
+
+  function configurarLogin() {
+
+    signUpMode = false;
+
+    nameField.hidden = true;
+
+    accountTitle.textContent = "Entrar";
+
+    accountSubtitle.textContent =
+      "Acesse seu espaço de estudos.";
+
+    accountSubmit.textContent = "Entrar";
+
+    googleButtonText.textContent =
+      "Entrar com o Google";
+
+    switchAccount.textContent =
+      "Criar cadastro";
+
+    mostrarStatus("");
+
+  }
+
+
+  function configurarCadastro() {
+
+    signUpMode = true;
+
+    nameField.hidden = false;
+
+    accountTitle.textContent =
+      "Cadastro";
+
+    accountSubtitle.textContent =
+      "Crie sua conta para acompanhar seus estudos.";
+
+    accountSubmit.textContent =
+      "Cadastrar";
+
+    googleButtonText.textContent =
+      "Cadastrar com o Google";
+
+    switchAccount.textContent =
+      "Voltar para entrar";
+
+    mostrarStatus("");
+
+  }
+
+
+  // ==========================================
+  // ABRIR LOGIN
+  // ==========================================
+
+  function abrirLogin() {
+
+    configurarLogin();
+
+    accountModal.classList.add("open");
+
+  }
+
+
+  // ==========================================
+  // ABRIR CADASTRO
+  // ==========================================
+
+  function abrirCadastro() {
+
+    configurarCadastro();
+
+    accountModal.classList.add("open");
+
+  }
+
+
+  // ==========================================
+  // BOTÃO SUPERIOR
+  // ==========================================
+
+  accountButton.addEventListener("click", () => {
+
+    if (auth.currentUser) {
+
+      profileModal.classList.add("open");
+
+    } else {
+
+      abrirLogin();
+
+    }
+
+  });
+
+
+  // ==========================================
+  // TROCAR LOGIN / CADASTRO
+  // ==========================================
+
+  switchAccount.addEventListener("click", () => {
+
+    if (signUpMode) {
+
+      configurarLogin();
+
+    } else {
+
+      configurarCadastro();
+
+    }
+
+  });
+
+
+  // ==========================================
+  // CADASTRAR COM E-MAIL E SENHA
+  // ==========================================
+
+  async function cadastrarUsuario() {
+
+    const nome =
+      accountName.value.trim();
+
+    const email =
+      accountEmail.value.trim();
+
+    const senha =
+      accountPassword.value;
+
+
+    if (!nome) {
+
+      mostrarStatus(
+        "Digite seu nome.",
+        true
+      );
+
+      return;
+
+    }
+
+
+    if (!email) {
+
+      mostrarStatus(
+        "Digite seu e-mail.",
+        true
+      );
+
+      return;
+
+    }
+
+
+    if (senha.length < 6) {
+
+      mostrarStatus(
+        "A senha precisa ter pelo menos 6 caracteres.",
+        true
+      );
+
+      return;
+
+    }
+
+
+    try {
+
+      mostrarStatus("Criando sua conta...");
+
+
+      // Firebase Authentication
+      const resultado =
+        await createUserWithEmailAndPassword(
+          auth,
+          email,
+          senha
+        );
+
+
+      const user =
+        resultado.user;
+
+
+      // Firestore
+      await setDoc(
+        doc(db, "usuarios", user.uid),
+        {
+          uid: user.uid,
+          nome: nome,
+          email: user.email,
+          provedor: "email",
+          criadoEm: serverTimestamp()
+        }
+      );
+
+
+      mostrarStatus(
+        "Cadastro realizado com sucesso!"
+      );
+
+
+      accountForm.reset();
+
+
+      setTimeout(() => {
+
+        accountModal.classList.remove("open");
+
+      }, 800);
+
+
+    } catch (erro) {
+
+      console.error(erro);
+
+      tratarErroFirebase(erro);
+
+    }
+
+  }
+
+
+  // ==========================================
+  // LOGIN COM E-MAIL + SENHA + NOME
+  // ==========================================
+
+  async function entrarUsuario() {
+
+    const nomeDigitado =
+      accountName.value.trim();
+
+    const email =
+      accountEmail.value.trim();
+
+    const senha =
+      accountPassword.value;
+
+
+    if (!email) {
+
+      mostrarStatus(
+        "Digite seu e-mail.",
+        true
+      );
+
+      return;
+
+    }
+
+
+    if (!senha) {
+
+      mostrarStatus(
+        "Digite sua senha.",
+        true
+      );
+
+      return;
+
+    }
+
+
+    try {
+
+      mostrarStatus(
+        "Verificando seus dados..."
+      );
+
+
+      // ======================================
+      // Firebase Authentication
+      // ======================================
+
+      const resultado =
+        await signInWithEmailAndPassword(
+          auth,
+          email,
+          senha
+        );
+
+
+      const user =
+        resultado.user;
+
+
+      // ======================================
+      // Firestore
+      // ======================================
+
+      const usuarioRef =
+        doc(db, "usuarios", user.uid);
+
+
+      const usuarioSnap =
+        await getDoc(usuarioRef);
+
+
+      if (!usuarioSnap.exists()) {
+
+        await signOut(auth);
+
+        mostrarStatus(
+          "Seu perfil não foi encontrado no Firestore.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      const dados =
+        usuarioSnap.data();
+
+
+      // ======================================
+      // VERIFICA O NOME
+      // ======================================
+
+      if (
+        nomeDigitado &&
+        dados.nome &&
+        dados.nome.toLowerCase() !==
+        nomeDigitado.toLowerCase()
+      ) {
+
+        await signOut(auth);
+
+        mostrarStatus(
+          "O nome não corresponde ao cadastro.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      mostrarStatus(
+        "Login realizado com sucesso!"
+      );
+
+
+      setTimeout(() => {
+
+        accountModal.classList.remove("open");
+
+      }, 600);
+
+
+    } catch (erro) {
+
+      console.error(erro);
+
+      tratarErroFirebase(erro);
+
+    }
+
+  }
+
+
+  // ==========================================
+  // FORMULÁRIO PRINCIPAL
+  // ==========================================
+
+  accountForm.addEventListener(
+    "submit",
+    async (event) => {
+
+      event.preventDefault();
+
+
+      if (signUpMode) {
+
+        await cadastrarUsuario();
+
+      } else {
+
+        await entrarUsuario();
+
+      }
+
+    }
+  );
+
+
+  // ==========================================
+  // LOGIN / CADASTRO GOOGLE
+  // ==========================================
+
+  googleSubmit.addEventListener(
+    "click",
+    async () => {
+
+      try {
+
+        mostrarStatus(
+          "Abrindo o Google..."
+        );
+
+
+        const resultado =
+          await signInWithPopup(
+            auth,
+            googleProvider
+          );
+
+
+        const user =
+          resultado.user;
+
+
+        // ====================================
+        // Verifica se já existe no Firestore
+        // ====================================
+
+        const usuarioRef =
+          doc(db, "usuarios", user.uid);
+
+        const usuarioSnap =
+          await getDoc(usuarioRef);
+
+
+        if (!usuarioSnap.exists()) {
+
+          await setDoc(
+            usuarioRef,
+            {
+              uid: user.uid,
+
+              nome:
+                user.displayName ||
+                user.email.split("@")[0],
+
+              email:
+                user.email,
+
+              provedor: "google",
+
+              criadoEm:
+                serverTimestamp()
+            }
+          );
+
+        }
+
+
+        mostrarStatus(
+          "Login com Google realizado!"
+        );
+
+
+        setTimeout(() => {
+
+          accountModal.classList.remove(
+            "open"
+          );
+
+        }, 600);
+
+
+      } catch (erro) {
+
+        console.error(erro);
+
+        tratarErroFirebase(erro);
+
+      }
+
+    }
+  );
+
+
+  // ==========================================
+  // ATUALIZAR INTERFACE DO PERFIL
+  // ==========================================
+
+  async function atualizarPerfil(user) {
+
+    if (!user) {
+
+      accountLabel.textContent =
+        "Entrar";
+
+      profileName.textContent =
+        "Visitante";
+
+      profileNameInput.value = "";
+
+      headerAvatar.textContent = "Q";
+
+      profileAvatar.textContent = "Q";
+
+      return;
+
+    }
+
+
+    try {
+
+      const usuarioRef =
+        doc(db, "usuarios", user.uid);
+
+      const usuarioSnap =
+        await getDoc(usuarioRef);
+
+
+      let nome =
+        user.displayName ||
+        user.email.split("@")[0];
+
+
+      if (usuarioSnap.exists()) {
+
+        const dados =
+          usuarioSnap.data();
+
+        nome =
+          dados.nome || nome;
+
+      }
+
+
+      accountLabel.textContent =
+        nome;
+
+      profileName.textContent =
+        nome;
+
+      profileNameInput.value =
+        nome;
+
+
+      const primeiraLetra =
+        nome.charAt(0).toUpperCase();
+
+
+      headerAvatar.textContent =
+        primeiraLetra;
+
+      profileAvatar.textContent =
+        primeiraLetra;
+
+
+    } catch (erro) {
+
+      console.error(
+        "Erro ao carregar perfil:",
+        erro
+      );
+
+    }
+
+  }
+
+
+  // ==========================================
+  // ALTERAR NOME DO PERFIL
+  // ==========================================
+
+  profileNameForm.addEventListener(
+    "submit",
+    async (event) => {
+
+      event.preventDefault();
+
+
+      const user =
+        auth.currentUser;
+
+
+      if (!user) {
+
+        return;
+
+      }
+
+
+      const novoNome =
+        profileNameInput.value.trim();
+
+
+      if (!novoNome) {
+
+        return;
+
+      }
+
+
+      try {
+
+        await updateDoc(
+          doc(db, "usuarios", user.uid),
+          {
+            nome: novoNome
+          }
+        );
+
+
+        atualizarPerfil(user);
+
+
+      } catch (erro) {
+
+        console.error(erro);
+
+        alert(
+          "Erro ao alterar o nome: " +
+          erro.message
+        );
+
+      }
+
+    }
+  );
+
+
+  // ==========================================
+  // SAIR DA CONTA
+  // ==========================================
+
+  logoutButton.addEventListener(
+    "click",
+    async () => {
+
+      try {
+
+        await signOut(auth);
+
+        profileModal.classList.remove(
+          "open"
+        );
+
+        accountModal.classList.remove(
+          "open"
+        );
+
+      } catch (erro) {
+
+        console.error(
+          "Erro ao sair:",
+          erro
+        );
+
+      }
+
+    }
+  );
+
+
+  // ==========================================
+  // OBSERVA LOGIN / LOGOUT
+  // ==========================================
+
+  onAuthStateChanged(
+    auth,
+    async (user) => {
+
+      if (user) {
+
+        console.log(
+          "Usuário conectado:",
+          user.email
+        );
+
+        await atualizarPerfil(user);
+
+      } else {
+
+        console.log(
+          "Nenhum usuário conectado."
+        );
+
+        await atualizarPerfil(null);
+
+      }
+
+    }
+  );
+
+
+  // ==========================================
+  // ERROS DO FIREBASE
+  // ==========================================
+
+  function tratarErroFirebase(erro) {
+
+    let mensagem =
+      "Ocorreu um erro. Tente novamente.";
+
+
+    switch (erro.code) {
+
+      case "auth/email-already-in-use":
+
+        mensagem =
+          "Este e-mail já está cadastrado.";
+
+        break;
+
+
+      case "auth/invalid-email":
+
+        mensagem =
+          "Digite um e-mail válido.";
+
+        break;
+
+
+      case "auth/weak-password":
+
+        mensagem =
+          "A senha precisa ter pelo menos 6 caracteres.";
+
+        break;
+
+
+      case "auth/invalid-credential":
+
+        mensagem =
+          "E-mail ou senha incorretos.";
+
+        break;
+
+
+      case "auth/user-not-found":
+
+        mensagem =
+          "Usuário não encontrado.";
+
+        break;
+
+
+      case "auth/wrong-password":
+
+        mensagem =
+          "Senha incorreta.";
+
+        break;
+
+
+      case "auth/popup-closed-by-user":
+
+        mensagem =
+          "A janela do Google foi fechada.";
+
+        break;
+
+
+      case "auth/popup-blocked":
+
+        mensagem =
+          "O navegador bloqueou a janela do Google.";
+
+        break;
+
+
+      case "auth/unauthorized-domain":
+
+        mensagem =
+          "Este domínio não está autorizado no Firebase.";
+
+        break;
+
+
+      default:
+
+        console.error(
+          "Código Firebase:",
+          erro.code
+        );
+
+        mensagem =
+          erro.message ||
+          mensagem;
+
+    }
+
+
+    mostrarStatus(
+      mensagem,
+      true
+    );
+
+  }
+
+</script>
 </body>
 </html>
