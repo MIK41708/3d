@@ -1257,9 +1257,9 @@
     }
 
     function updateReaderButtons() {
-      const speaking = synth && synth.speaking;
-      const paused = synth && synth.paused;
-      readStart.disabled = isReading && speaking;
+      const speaking = !!(synth && synth.speaking);
+      const paused = !!(synth && synth.paused);
+      readStart.disabled = isReading && (speaking || paused);
       readPause.disabled = !speaking || paused;
       readResume.disabled = !paused;
       readStop.disabled = !speaking && !paused && !isReading;
@@ -1310,9 +1310,7 @@
           return;
         }
         // Pequena pausa entre blocos para dar estabilidade ao navegador.
-        setTimeout(() => {
-          if (isReading) speakCurrentChunk();
-        }, 60);
+        if (isReading) speakCurrentChunk();
       };
 
       utterance.onerror = (event) => {
@@ -1324,25 +1322,27 @@
     }
 
     function speakSite() {
-      if (!('speechSynthesis' in window)) {
-        readerStatus.textContent = 'Seu navegador não suporta leitura de voz.';
+      if (!window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== 'function') {
+        readerStatus.textContent = 'A leitura de voz não está disponível neste navegador. Use Google Chrome ou Microsoft Edge.';
         return;
       }
 
-      synth.cancel();
       const text = readableContent().join('. ');
       if (!text.trim()) {
         readerStatus.textContent = 'Não há conteúdo disponível para leitura.';
         return;
       }
 
+      // Importante: iniciar a fala diretamente dentro do clique do usuário.
+      // Alguns navegadores bloqueiam fala iniciada depois de setTimeout.
+      synth.cancel();
       speechChunks = createSpeechChunks(text);
       currentChunk = 0;
       isReading = true;
-      readerStatus.textContent = `Preparando leitura em ${languageNames[getReaderLanguage()] || getReaderLanguage()}...`;
+      readerStatus.textContent = `Lendo em ${languageNames[getReaderLanguage()] || getReaderLanguage()}...`;
       updateProgress();
       updateReaderButtons();
-      setTimeout(speakCurrentChunk, 80);
+      speakCurrentChunk();
     }
 
     readerButton.addEventListener('click', () => {
