@@ -608,7 +608,7 @@
       <button id="increaseTextButton" type="button" title="Aumentar texto" aria-label="Aumentar texto">+A</button>
       <button id="colorButton" type="button" title="Mudar de cor" aria-label="Mudar de cor">Mudar de cor</button>
       <button id="themeButton" type="button">Modo claro</button>
-      <button class="reader-button" id="readerButton" type="button" aria-expanded="false" aria-controls="readerPanel" onclick="toggleReaderPanel(event)"><i class="fa-solid fa-volume-high" aria-hidden="true"></i><span>Leitura</span></button>
+      <button class="reader-button" id="readerButton" type="button" aria-expanded="false" aria-controls="readerPanel" onclick="return window.quimicaReaderToggle(event)"><i class="fa-solid fa-volume-high" aria-hidden="true"></i><span>Leitura</span></button>
       <button class="profile-button" id="accountButton" type="button"><span id="accountLabel">Cadastrar</span></button>
       <button class="avatar-button" id="profileButton" type="button" title="Abrir perfil" aria-label="Abrir perfil"><span class="profile-avatar" id="headerAvatar">Q</span></button>
     </div>
@@ -2412,6 +2412,27 @@ const firebaseConfig = {
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ensureReaderButton);
   else ensureReaderButton();
+})();
+</script>
+
+<script>
+(function(){
+  function init(){
+    const b=document.getElementById('readerButton'),p=document.getElementById('readerPanel'),st=document.getElementById('readerLanguage');
+    const start=document.getElementById('readStart'),pause=document.getElementById('readPause'),resume=document.getElementById('readResume'),stop=document.getElementById('readStop'),rate=document.getElementById('readerRate'),rv=document.getElementById('readerRateValue'),bar=document.getElementById('readerProgressBar'),sel=document.getElementById('readerVoice');
+    if(!b||!p||!st||!start)return;
+    const sy=window.speechSynthesis||null; let voices=[],q=[],i=0,active=false,current=null;
+    window.quimicaReaderToggle=function(e){if(e){e.preventDefault();e.stopPropagation()} const open=!p.classList.contains('open');p.classList.toggle('open',open);b.setAttribute('aria-expanded',String(open));if(open){st.textContent=sy?'Pronto. Clique em “Ler site”.':'Seu navegador não oferece leitura de voz.';load()}return false};
+    function load(){if(!sy||!sel)return;voices=sy.getVoices()||[];sel.innerHTML='';const lang=(document.documentElement.lang||'pt-BR').toLowerCase(),base=lang.split('-')[0],list=voices.filter(v=>v.lang&&v.lang.toLowerCase().startsWith(base+'-'));(list.length?list:voices).forEach((v,n)=>{const o=document.createElement('option');o.value=n;o.textContent=v.name+' ('+v.lang+')';sel.appendChild(o)});if(!sel.options.length){const o=document.createElement('option');o.textContent='Voz padrão do navegador';sel.appendChild(o)}}
+    function voice(){const o=sel&&sel.options[sel.selectedIndex];return o?voices.find(v=>o.textContent===v.name+' ('+v.lang+')'):null}
+    function text(){return Array.from(document.querySelectorAll('.content-overlay h1,.content-overlay h2,.content-overlay p,.extra-content h2,.extra-content p,.extra-intro,.resource-card h3,.resource-card p,.site-footer .footer-title,.site-footer .footer-help')).map(x=>(x.innerText||x.textContent||'').replace(/\s+/g,' ').trim()).filter(Boolean).join('. ')}
+    function queue(t){const a=t.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[t],r=[];let z='';a.forEach(x=>{x=x.trim();if(!x)return;if((z+' '+x).trim().length<=220)z=(z+' '+x).trim();else{if(z)r.push(z);while(x.length>220){r.push(x.slice(0,220));x=x.slice(220)}z=x}});if(z)r.push(z);return r}
+    function ui(){const speaking=!!(sy&&sy.speaking),paused=!!(sy&&sy.paused);start.disabled=active&&(speaking||paused);if(pause)pause.disabled=!speaking||paused;if(resume)resume.disabled=!paused;if(stop)stop.disabled=!active&&!speaking&&!paused}
+    function next(){if(!active||!sy)return;if(i>=q.length){active=false;current=null;bar&&(bar.style.width='100%');st.textContent='Leitura concluída.';ui();return}const u=new SpeechSynthesisUtterance(q[i]);current=u;u.rate=Number(rate&&rate.value)||1;u.volume=1;u.pitch=1;const v=voice();u.voice=v||null;u.lang=v?v.lang:(document.documentElement.lang||'pt-BR');u.onstart=()=>{st.textContent='Lendo '+(i+1)+' de '+q.length+'...';if(bar)bar.style.width=(i/q.length*100)+'%';ui()};u.onend=()=>{if(active&&current===u){i++;current=null;setTimeout(next,120)}};u.onerror=e=>{if(active&&current===u){active=false;current=null;st.textContent='Erro de voz: '+(e.error||'desconhecido')+'.';ui()}};try{sy.resume();sy.speak(u)}catch(e){active=false;st.textContent='Não foi possível iniciar a leitura.';ui()}}
+    function begin(){if(!sy||typeof SpeechSynthesisUtterance==='undefined'){st.textContent='Leitura de voz não está disponível neste navegador.';return}const t=text();if(!t){st.textContent='Não encontrei conteúdo para ler.';return}sy.cancel();q=queue(t);i=0;active=true;if(bar)bar.style.width='0%';st.textContent='Iniciando leitura...';ui();next()}
+    start.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();begin()});pause&&pause.addEventListener('click',()=>{if(sy&&sy.speaking&&!sy.paused){sy.pause();st.textContent='Leitura pausada.';ui()}});resume&&resume.addEventListener('click',()=>{if(sy&&sy.paused){sy.resume();st.textContent='Continuando leitura...';ui()}else if(!active)begin()});stop&&stop.addEventListener('click',()=>{active=false;if(sy)sy.cancel();current=null;st.textContent='Leitura parada.';ui()});rate&&rate.addEventListener('input',()=>{if(rv)rv.textContent=Number(rate.value).toFixed(1).replace('.',',')+'x'});if(sy&&sy.addEventListener)sy.addEventListener('voiceschanged',load);load();ui();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
 </body>
