@@ -608,7 +608,7 @@
       <button id="increaseTextButton" type="button" title="Aumentar texto" aria-label="Aumentar texto">+A</button>
       <button id="colorButton" type="button" title="Mudar de cor" aria-label="Mudar de cor">Mudar de cor</button>
       <button id="themeButton" type="button">Modo claro</button>
-      <button class="reader-button" id="readerButton" type="button" aria-expanded="false" aria-controls="readerPanel"><i class="fa-solid fa-volume-high" aria-hidden="true"></i><span>Leitura</span></button>
+      <button class="reader-button" id="readerButton" type="button" aria-expanded="false" aria-controls="readerPanel" onclick="toggleReaderPanel(event)"><i class="fa-solid fa-volume-high" aria-hidden="true"></i><span>Leitura</span></button>
       <button class="profile-button" id="accountButton" type="button"><span id="accountLabel">Cadastrar</span></button>
       <button class="avatar-button" id="profileButton" type="button" title="Abrir perfil" aria-label="Abrir perfil"><span class="profile-avatar" id="headerAvatar">Q</span></button>
     </div>
@@ -1154,7 +1154,7 @@
     applyLanguage(currentLanguage);
     updateProfile();
 
-    // --- LEITOR DE VOZ NATIVO E ROBUSTO (Web Speech API) ---
+    // --- LEITOR DE VOZ NATIVO (Web Speech API) ---
     const readerPanel = document.getElementById('readerPanel');
     const readerButton = document.getElementById('readerButton');
     const readerStatus = document.getElementById('readerLanguage');
@@ -1166,235 +1166,260 @@
     const readPause = document.getElementById('readPause');
     const readResume = document.getElementById('readResume');
     const readStop = document.getElementById('readStop');
-    const synth = window.speechSynthesis;
 
+    const synth = window.speechSynthesis || null;
     let voices = [];
-    let speechChunks = [];
-    let currentChunk = 0;
-    let utterance = null;
-    let isReading = false;
+    let chunks = [];
+    let chunkIndex = 0;
+    let reading = false;
+    let paused = false;
+    let currentUtterance = null;
+    let advancing = false;
 
-    const languageNames = {
-      'pt-BR': 'Português',
-      en: 'English',
-      'zh-CN': '普通话',
-      es: 'Español'
-    };
-
-    function getReaderLanguage() {
-      return document.documentElement.lang || 'pt-BR';
+    function readerLang() {
+      const lang = (document.documentElement.lang || 'pt-BR').toLowerCase();
+      if (lang === 'pt') return 'pt-BR';
+      if (lang === 'en') return 'en-US';
+      if (lang === 'es') return 'es-ES';
+      if (lang.startsWith('zh')) return 'zh-CN';
+      return lang;
     }
 
     function readableContent() {
       const selectors = [
         '.content-overlay h1', '.content-overlay h2', '.content-overlay p',
-        '.extra-content h2', '.extra-intro',
+        '.extra-content h2', '.extra-content p', '.extra-intro',
         '.resource-card h3', '.resource-card p',
         '.site-footer .footer-title', '.site-footer .footer-help'
       ];
-      return Array.from(document.querySelectorAll(selectors.join(', ')))
-        .map(el => el.textContent.replace(/\s+/g, ' ').trim())
+      return [...document.querySelectorAll(selectors.join(','))]
+        .map(el => (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim())
         .filter(Boolean);
     }
 
-    // Divide o texto em partes menores. Isso evita o problema comum do Chrome
-    // de interromper SpeechSynthesis quando recebe um texto muito grande.
-    function createSpeechChunks(text) {
-      const maxLength = 220;
-      const sentences = text.match(/[^.!?。！？]+[.!?。！？]+|[^.!?。！？]+$/g) || [text];
-      const chunks = [];
-      let current = '';
-
-      sentences.forEach(sentence => {
-        const clean = sentence.trim();
-        if (!clean) return;
-        if ((current + ' ' + clean).trim().length <= maxLength) {
-          current = (current + ' ' + clean).trim();
+    function splitText(text) {
+      const max = 180;
+      const result = [];
+      const parts = text.split(/(?<=[.!?;:])\s+/);
+      let buffer = '';
+      for (const part of parts) {
+        if (!part) continue;
+        if ((buffer + ' ' + part).trim().length <= max) {
+          buffer = (buffer + ' ' + part).trim();
         } else {
-          if (current) chunks.push(current);
-          if (clean.length <= maxLength) {
-            current = clean;
-          } else {
-            for (let i = 0; i < clean.length; i += maxLength) chunks.push(clean.slice(i, i + maxLength));
-            current = '';
+          if (buffer) result.push(buffer);
+          if (part.length <= max) buffer = part;
+          else {
+            for (let i = 0; i < part.length; i += max) result.push(part.slice(i, i + max));
+            buffer = '';
           }
         }
-      });
-      if (current) chunks.push(current);
-      return chunks;
+      }
+      if (buffer) result.push(buffer);
+      return result;
     }
 
-    function loadVoices() {
-      if (!('speechSynthesis' in window)) return;
-      voices = synth.getVoices().filter(voice => voice && voice.lang);
-      const lang = getReaderLanguage().toLowerCase();
-      const baseLang = lang.split('-')[0];
-      const matching = voices.filter(voice => voice.lang.toLowerCase() === lang || voice.lang.toLowerCase().startsWith(baseLang + '-'));
-      const list = matching.length ? matching : voices;
-
+    function loadReaderVoices() {
+      if (!synth) return;
+      voices = synth.getVoices() || [];
+      const lang = readerLang();
+      const base = lang.split('-')[0];
+      const matches = voices.filter(v => v.lang && (v.lang.toLowerCase() === lang || v.lang.toLowerCase().startsWith(base + '-')));
+      const list = matches.length ? matches : voices;
       readerVoice.innerHTML = '';
-      list.forEach((voice, index) => {
-        const option = document.createElement('option');
-        option.value = String(index);
-        option.textContent = `${voice.name} — ${voice.lang}`;
-        option.dataset.voiceName = voice.name;
-        option.dataset.voiceLang = voice.lang;
-        readerVoice.appendChild(option);
+      list.forEach((voice, i) => {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        opt.textContent = `${voice.name} (${voice.lang})`;
+        opt.dataset.name = voice.name;
+        opt.dataset.lang = voice.lang;
+        readerVoice.appendChild(opt);
       });
-
       if (!list.length) {
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = 'Voz padrão do navegador';
-        readerVoice.appendChild(option);
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Voz padrão do navegador';
+        readerVoice.appendChild(opt);
       }
     }
 
-    function selectedVoice() {
-      const option = readerVoice.options[readerVoice.selectedIndex];
-      if (!option) return null;
-      return voices.find(voice => voice.name === option.dataset.voiceName && voice.lang === option.dataset.voiceLang) || null;
+    function getSelectedVoice() {
+      const opt = readerVoice.options[readerVoice.selectedIndex];
+      if (!opt) return null;
+      return voices.find(v => v.name === opt.dataset.name && v.lang === opt.dataset.lang) || null;
     }
 
-    function updateReaderButtons() {
+    function updateReaderUI() {
       const speaking = !!(synth && synth.speaking);
-      const paused = !!(synth && synth.paused);
-      readStart.disabled = isReading && (speaking || paused);
-      readPause.disabled = !speaking || paused;
-      readResume.disabled = !paused;
-      readStop.disabled = !speaking && !paused && !isReading;
+      const browserPaused = !!(synth && synth.paused);
+      readStart.disabled = reading && (speaking || browserPaused);
+      readPause.disabled = !speaking || browserPaused;
+      readResume.disabled = !browserPaused;
+      readStop.disabled = !reading && !speaking && !browserPaused;
     }
 
-    function updateProgress() {
-      const percent = speechChunks.length ? (currentChunk / speechChunks.length) * 100 : 0;
-      readerProgressBar.style.width = `${Math.min(100, percent)}%`;
+    function setProgress() {
+      const value = chunks.length ? (chunkIndex / chunks.length) * 100 : 0;
+      readerProgressBar.style.width = `${Math.min(100, value)}%`;
     }
 
-    function finishReading(message = 'Leitura concluída') {
-      isReading = false;
-      utterance = null;
-      currentChunk = speechChunks.length;
+    function stopReader(message = 'Leitura parada') {
+      reading = false;
+      paused = false;
+      advancing = false;
+      if (synth) synth.cancel();
+      currentUtterance = null;
       readerStatus.textContent = message;
-      updateProgress();
-      updateReaderButtons();
+      updateReaderUI();
     }
 
-    function speakCurrentChunk() {
-      if (!isReading || !speechChunks[currentChunk]) {
-        finishReading();
+    function speakChunk() {
+      if (!synth || !reading || chunkIndex >= chunks.length) {
+        if (reading) {
+          reading = false;
+          readerStatus.textContent = 'Leitura concluída';
+          readerProgressBar.style.width = '100%';
+          updateReaderUI();
+        }
         return;
       }
 
-      const chunk = speechChunks[currentChunk];
-      utterance = new SpeechSynthesisUtterance(chunk);
-      utterance.lang = getReaderLanguage();
-      utterance.rate = Number(readerRate.value);
-      utterance.pitch = 1;
-      const voice = selectedVoice();
+      const text = chunks[chunkIndex];
+      const u = new SpeechSynthesisUtterance(text);
+      currentUtterance = u;
+      u.lang = readerLang();
+      u.rate = parseFloat(readerRate.value) || 1;
+      u.pitch = 1;
+      u.volume = 1;
+      const voice = getSelectedVoice();
       if (voice) {
-        utterance.voice = voice;
-        utterance.lang = voice.lang;
+        u.voice = voice;
+        u.lang = voice.lang;
       }
 
-      utterance.onstart = () => {
-        readerStatus.textContent = `Lendo ${currentChunk + 1} de ${speechChunks.length}...`;
-        updateProgress();
-        updateReaderButtons();
+      u.onstart = () => {
+        paused = false;
+        advancing = false;
+        readerStatus.textContent = `Lendo ${chunkIndex + 1} de ${chunks.length}...`;
+        setProgress();
+        updateReaderUI();
       };
 
-      utterance.onend = () => {
-        if (!isReading) return;
-        currentChunk += 1;
-        if (currentChunk >= speechChunks.length) {
-          finishReading();
+      u.onend = () => {
+        if (!reading || currentUtterance !== u) return;
+        chunkIndex++;
+        setProgress();
+        if (chunkIndex >= chunks.length) {
+          reading = false;
+          currentUtterance = null;
+          readerStatus.textContent = 'Leitura concluída';
+          readerProgressBar.style.width = '100%';
+          updateReaderUI();
           return;
         }
-        // Pequena pausa entre blocos para dar estabilidade ao navegador.
-        if (isReading) speakCurrentChunk();
+        // Chrome pode falhar quando speak() é chamado imediatamente após onend.
+        advancing = true;
+        setTimeout(() => {
+          advancing = false;
+          if (reading) speakChunk();
+        }, 80);
       };
 
-      utterance.onerror = (event) => {
-        if (event && event.error === 'canceled') return;
-        finishReading('Não foi possível continuar a leitura.');
+      u.onerror = (event) => {
+        if (!reading || currentUtterance !== u) return;
+        const error = event && event.error ? event.error : 'unknown';
+        if (error === 'canceled' || error === 'interrupted') return;
+        reading = false;
+        currentUtterance = null;
+        readerStatus.textContent = `Erro de voz: ${error}. Tente novamente.`;
+        updateReaderUI();
       };
 
-      synth.speak(utterance);
+      try {
+        // Alguns navegadores ficam presos em estado pausado após cancel/resume.
+        synth.resume();
+        synth.speak(u);
+      } catch (err) {
+        reading = false;
+        readerStatus.textContent = 'Não foi possível iniciar a voz. Verifique o áudio do computador e tente novamente.';
+        updateReaderUI();
+      }
     }
 
-    function speakSite() {
-      if (!window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== 'function') {
-        readerStatus.textContent = 'A leitura de voz não está disponível neste navegador. Use Google Chrome ou Microsoft Edge.';
+    function startReader() {
+      if (!synth || typeof SpeechSynthesisUtterance !== 'function') {
+        readerStatus.textContent = 'Seu navegador não disponibiliza leitura de voz. Use Chrome ou Edge atualizado.';
         return;
       }
 
       const text = readableContent().join('. ');
       if (!text.trim()) {
-        readerStatus.textContent = 'Não há conteúdo disponível para leitura.';
+        readerStatus.textContent = 'Não encontrei texto para ler.';
         return;
       }
 
-      // Importante: iniciar a fala diretamente dentro do clique do usuário.
-      // Alguns navegadores bloqueiam fala iniciada depois de setTimeout.
+      // Cancela qualquer fila antiga e reinicia do zero.
       synth.cancel();
-      speechChunks = createSpeechChunks(text);
-      currentChunk = 0;
-      isReading = true;
-      readerStatus.textContent = `Lendo em ${languageNames[getReaderLanguage()] || getReaderLanguage()}...`;
-      updateProgress();
-      updateReaderButtons();
-      speakCurrentChunk();
+      reading = true;
+      paused = false;
+      chunks = splitText(text);
+      chunkIndex = 0;
+      readerProgressBar.style.width = '0%';
+      readerStatus.textContent = `Preparando leitura em ${readerLang()}...`;
+      updateReaderUI();
+
+      // resume() + speak() aqui mantém o início associado ao clique do usuário.
+      synth.resume();
+      speakChunk();
     }
 
-    readerButton.addEventListener('click', () => {
-      const isOpen = readerPanel.classList.toggle('open');
-      readerButton.setAttribute('aria-expanded', String(isOpen));
-      if (isOpen) {
-        loadVoices();
-        updateReaderButtons();
+    window.toggleReaderPanel = function(event) {
+      if (event) event.preventDefault();
+      const panel = document.getElementById('readerPanel');
+      const button = document.getElementById('readerButton');
+      if (!panel || !button) return;
+      const open = !panel.classList.contains('open');
+      panel.classList.toggle('open', open);
+      button.setAttribute('aria-expanded', String(open));
+      if (open) {
+        try { loadReaderVoices(); } catch (e) {}
+        try { updateReaderUI(); } catch (e) {}
       }
-    });
+    };
 
-    readStart.addEventListener('click', speakSite);
+    readStart.addEventListener('click', startReader);
 
     readPause.addEventListener('click', () => {
-      if (synth.speaking && !synth.paused) {
+      if (synth && synth.speaking && !synth.paused) {
         synth.pause();
+        paused = true;
         readerStatus.textContent = 'Leitura pausada';
-        updateReaderButtons();
+        updateReaderUI();
       }
     });
 
     readResume.addEventListener('click', () => {
-      if (synth.paused) {
+      if (synth && synth.paused) {
         synth.resume();
-        readerStatus.textContent = `Lendo ${currentChunk + 1} de ${speechChunks.length}...`;
-        updateReaderButtons();
-      } else if (!isReading) {
-        speakSite();
+        paused = false;
+        readerStatus.textContent = `Lendo ${chunkIndex + 1} de ${chunks.length}...`;
+        updateReaderUI();
+      } else if (!reading) {
+        startReader();
       }
     });
 
-    readStop.addEventListener('click', () => {
-      isReading = false;
-      synth.cancel();
-      utterance = null;
-      readerStatus.textContent = 'Leitura parada';
-      readerProgressBar.style.width = '0%';
-      currentChunk = 0;
-      updateReaderButtons();
-    });
+    readStop.addEventListener('click', () => stopReader());
 
     readerRate.addEventListener('input', () => {
-      readerRateValue.textContent = `${Number(readerRate.value).toFixed(1).replace('.', ',')}x`;
+      readerRateValue.textContent = `${parseFloat(readerRate.value).toFixed(1).replace('.', ',')}x`;
     });
 
-    // Recarrega as vozes quando o navegador disponibilizá-las.
-    if ('speechSynthesis' in window) {
-      loadVoices();
-      if (typeof synth.addEventListener === 'function') synth.addEventListener('voiceschanged', loadVoices);
-      else synth.onvoiceschanged = loadVoices;
+    if (synth) {
+      loadReaderVoices();
+      if ('onvoiceschanged' in synth) synth.onvoiceschanged = loadReaderVoices;
     }
-    updateReaderButtons();
+    updateReaderUI();
 
     if (window.VLibras) new window.VLibras.Widget('https://vlibras.gov.br/app');
   </script>
@@ -2370,6 +2395,24 @@ const firebaseConfig = {
 
   }
 
+</script>
+<script>
+(function () {
+  function ensureReaderButton() {
+    var button = document.getElementById('readerButton');
+    var panel = document.getElementById('readerPanel');
+    if (!button || !panel) return;
+    window.toggleReaderPanel = window.toggleReaderPanel || function (event) {
+      if (event) event.preventDefault();
+      var open = !panel.classList.contains('open');
+      panel.classList.toggle('open', open);
+      button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    if (!button.getAttribute('onclick')) button.setAttribute('onclick', 'toggleReaderPanel(event)');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ensureReaderButton);
+  else ensureReaderButton();
+})();
 </script>
 </body>
 </html>
