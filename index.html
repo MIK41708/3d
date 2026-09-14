@@ -40,9 +40,11 @@
       --studio-c: #c9dcd8;
     }
 
-    [data-color-mode="protanopia"] { --accent-cyan: #0072b2; --accent-orange: #e69f00; --glass-border: rgba(0, 114, 178, .3); --text-main: #102a43; --page-bg: #dceeff; --section-bg: #dceeff; --studio-a: #dceeff; --studio-b: #b9d7ed; --studio-c: #8fb8d4; }
-    [data-color-mode="deuteranopia"] { --accent-cyan: #0072b2; --accent-orange: #d55e00; --glass-border: rgba(0, 114, 178, .3); --text-main: #102a43; --page-bg: #e1eff8; --section-bg: #e1eff8; --studio-a: #e1eff8; --studio-b: #bdd8e8; --studio-c: #91b9d0; }
-    [data-color-mode="tritanopia"] { --accent-cyan: #009e73; --accent-orange: #d55e00; --glass-border: rgba(0, 158, 115, .3); --text-main: #123b36; --page-bg: #d9f2e9; --section-bg: #d9f2e9; --studio-a: #d9f2e9; --studio-b: #b5ded1; --studio-c: #8fc6b7; }
+    /* Modos de acessibilidade: alteram somente as cores de destaque.
+       O fundo e o texto continuam sendo controlados pelo Modo claro/escuro. */
+    [data-color-mode="protanopia"] { --accent-cyan: #0072b2; --accent-orange: #e69f00; --glass-border: rgba(0, 114, 178, .3); }
+    [data-color-mode="deuteranopia"] { --accent-cyan: #0072b2; --accent-orange: #d55e00; --glass-border: rgba(0, 114, 178, .3); }
+    [data-color-mode="tritanopia"] { --accent-cyan: #009e73; --accent-orange: #d55e00; --glass-border: rgba(0, 158, 115, .3); }
 
     * {
       box-sizing: border-box;
@@ -368,46 +370,20 @@
     @media (max-width: 800px) { .resource-grid { grid-template-columns: 1fr 1fr; } .site-controls { gap: 5px; } }
     @media (max-width: 560px) { .resource-grid { grid-template-columns: 1fr; } .extra-content { padding: 70px 5vw; } .site-controls button { padding: 7px 8px; } .profile-button span:last-child { display: none; } .avatar-button { width: 35px; height: 35px; } .reader-actions { grid-template-columns: repeat(2, 1fr); } }
 
-    /* Paletas completas para leitura por pessoas com daltonismo */
-    [data-color-mode="protanopia"], [data-color-mode="deuteranopia"] {
-      --accessible-bg: #eaf4fb;
-      --accessible-surface: #ffffff;
-      --accessible-text: #102a43;
-      --accessible-muted: #365a73;
-      --accessible-accent: #0072b2;
-      --accessible-secondary: #e69f00;
+    /* Modos de acessibilidade sem interferir no tema claro/escuro */
+    [data-color-mode="protanopia"], [data-color-mode="deuteranopia"], [data-color-mode="tritanopia"] {
+      --accessible-accent: var(--accent-cyan);
+      --accessible-secondary: var(--accent-orange);
     }
-    [data-color-mode="tritanopia"] {
-      --accessible-bg: #eaf8f2;
-      --accessible-surface: #ffffff;
-      --accessible-text: #123b36;
-      --accessible-muted: #37645c;
-      --accessible-accent: #009e73;
-      --accessible-secondary: #d55e00;
+    [data-color-mode="protanopia"] h1, [data-color-mode="deuteranopia"] h1, [data-color-mode="tritanopia"] h1 {
+      background: linear-gradient(135deg, var(--text-main), var(--accent-cyan));
+      background-clip: text;
+      -webkit-background-clip: text;
     }
-    [data-color-mode="protanopia"] body, [data-color-mode="deuteranopia"] body, [data-color-mode="tritanopia"] body { color: var(--accessible-text); background: var(--accessible-bg); }
-    [data-color-mode="protanopia"] .extra-content, [data-color-mode="deuteranopia"] .extra-content, [data-color-mode="tritanopia"] .extra-content { background: var(--accessible-bg); }
-    [data-color-mode="protanopia"] .glass-card, [data-color-mode="deuteranopia"] .glass-card, [data-color-mode="tritanopia"] .glass-card,
-    [data-color-mode="protanopia"] .resource-card, [data-color-mode="deuteranopia"] .resource-card, [data-color-mode="tritanopia"] .resource-card,
-    [data-color-mode="protanopia"] .modal, [data-color-mode="deuteranopia"] .modal, [data-color-mode="tritanopia"] .modal { color: var(--accessible-text); border-color: color-mix(in srgb, var(--accessible-accent) 35%, transparent); background: var(--accessible-surface); box-shadow: 0 18px 45px rgba(16, 42, 67, .14); }
-    [data-color-mode="protanopia"] h1, [data-color-mode="deuteranopia"] h1, [data-color-mode="tritanopia"] h1 { background: linear-gradient(135deg, var(--accessible-text), var(--accessible-accent)); background-clip: text; -webkit-background-clip: text; }
-    [data-color-mode="protanopia"] h2, [data-color-mode="deuteranopia"] h2, [data-color-mode="tritanopia"] h2,
-    [data-color-mode="protanopia"] .resource-card h3, [data-color-mode="deuteranopia"] .resource-card h3, [data-color-mode="tritanopia"] .resource-card h3,
-    [data-color-mode="protanopia"] .logo, [data-color-mode="deuteranopia"] .logo, [data-color-mode="tritanopia"] .logo,
-    [data-color-mode="protanopia"] .modal-close, [data-color-mode="deuteranopia"] .modal-close, [data-color-mode="tritanopia"] .modal-close { color: var(--accessible-text); }
-    [data-color-mode="protanopia"] p, [data-color-mode="deuteranopia"] p, [data-color-mode="tritanopia"] p,
-    [data-color-mode="protanopia"] .modal-subtitle, [data-color-mode="deuteranopia"] .modal-subtitle, [data-color-mode="tritanopia"] .modal-subtitle,
-    [data-color-mode="protanopia"] .account-form p, [data-color-mode="deuteranopia"] .account-form p, [data-color-mode="tritanopia"] .account-form p { color: var(--accessible-muted); }
-    [data-color-mode="protanopia"] .tag, [data-color-mode="deuteranopia"] .tag, [data-color-mode="tritanopia"] .tag,
-    [data-color-mode="protanopia"] .content-links a, [data-color-mode="deuteranopia"] .content-links a, [data-color-mode="tritanopia"] .content-links a { color: var(--accessible-accent); }
-    [data-color-mode="protanopia"] .resource-card a, [data-color-mode="deuteranopia"] .resource-card a, [data-color-mode="tritanopia"] .resource-card a,
-    [data-color-mode="protanopia"] .profile-name-form button, [data-color-mode="deuteranopia"] .profile-name-form button, [data-color-mode="tritanopia"] .profile-name-form button,
-    [data-color-mode="protanopia"] .account-form > button[type="submit"], [data-color-mode="deuteranopia"] .account-form > button[type="submit"], [data-color-mode="tritanopia"] .account-form > button[type="submit"] { color: #ffffff; background: var(--accessible-accent); }
-    [data-color-mode="protanopia"] input, [data-color-mode="deuteranopia"] input, [data-color-mode="tritanopia"] input { color: var(--accessible-text); border-color: color-mix(in srgb, var(--accessible-accent) 45%, transparent); background: #f7fbff; }
-    [data-color-mode="protanopia"] .site-footer, [data-color-mode="deuteranopia"] .site-footer, [data-color-mode="tritanopia"] .site-footer { color: var(--accessible-muted); background: var(--accessible-bg); border-color: color-mix(in srgb, var(--accessible-accent) 35%, transparent); }
-    [data-color-mode="protanopia"] .site-footer .footer-title, [data-color-mode="deuteranopia"] .site-footer .footer-title, [data-color-mode="tritanopia"] .site-footer .footer-title { color: var(--accessible-text); }
-    [data-color-mode="protanopia"] #studio-background, [data-color-mode="deuteranopia"] #studio-background, [data-color-mode="tritanopia"] #studio-background { opacity: .28; }
-    
+    [data-color-mode="protanopia"] #studio-background, [data-color-mode="deuteranopia"] #studio-background, [data-color-mode="tritanopia"] #studio-background {
+      opacity: .92;
+    }
+
     /* Tamanhos do texto do site */
     html[data-text-size="small"] { font-size: 87.5%; }
     html[data-text-size="normal"] { font-size: 100%; }
@@ -890,7 +866,22 @@
     
     const savedTheme = localStorage.getItem('quimica-theme') || 'dark';
     document.documentElement.dataset.theme = savedTheme;
-    document.getElementById('themeButton').textContent = savedTheme === 'light' ? 'Modo escuro' : 'Modo claro';
+    const themeButton = document.getElementById('themeButton');
+    function updateThemeButton() {
+      const isLight = document.documentElement.dataset.theme === 'light';
+      const data = languageData && languageData[currentLanguage] ? languageData[currentLanguage] : null;
+      themeButton.textContent = data ? (isLight ? data.theme[1] : data.theme[0]) : (isLight ? 'Modo escuro' : 'Modo claro');
+      themeButton.setAttribute('aria-label', isLight ? 'Mudar para modo escuro' : 'Mudar para modo claro');
+    }
+
+    themeButton.addEventListener('click', () => {
+      const nextTheme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = nextTheme;
+      localStorage.setItem('quimica-theme', nextTheme);
+      updateThemeButton();
+      /* Recalcula o gradiente sem trocar a paleta de acessibilidade. */
+      if (typeof applyColorMode === 'function') applyColorMode(currentColorMode);
+    });
     
     const languages = ['PT', 'EN', '中文', 'ES'];
     const colorModes = [
@@ -937,7 +928,7 @@
       currentLanguage = language;
       document.documentElement.lang = data.html;
       document.getElementById('languageButton').textContent = language;
-      document.getElementById('themeButton').textContent = document.documentElement.dataset.theme === 'light' ? data.theme[1] : data.theme[0];
+      updateThemeButton();
       document.querySelectorAll('.tag').forEach((element, index) => { if (data.tags[index]) element.textContent = data.tags[index]; });
       document.querySelectorAll('.content-overlay .section').forEach((section, index) => { setText(`.content-overlay .section:nth-child(${index + 1}) h1, .content-overlay .section:nth-child(${index + 1}) h2`, data.titles[index]); setText(`.content-overlay .section:nth-child(${index + 1}) p`, data.atom[index]); });
       setText('.scroll-indicator span', data.scroll); setText('.extra-content h2', data.content[0]); setText('.extra-intro', data.content[1]);
