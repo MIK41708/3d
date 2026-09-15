@@ -22,6 +22,7 @@
       --accent-orange: #ff6b35;
       --page-bg: #030508;
       --section-bg: #080d14;
+      --error-color: #ff7b72;
       --studio-a: #1a2639;
       --studio-b: #080d14;
       --studio-c: #030508;
@@ -35,6 +36,7 @@
       --accent-cyan: #087c8a;
       --page-bg: #dcebe8;
       --section-bg: #dcebe8;
+      --error-color: #b42318;
       --studio-a: #eef8f4;
       --studio-b: #dcebe8;
       --studio-c: #c9dcd8;
@@ -261,6 +263,8 @@
 
     /* Conteúdo complementar */
     .site-controls { display: flex; align-items: center; gap: 8px; padding: 6px; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(13, 22, 33, .65); backdrop-filter: blur(12px); }
+    header, .site-controls, .site-controls button { position: relative; z-index: 100; }
+    .site-controls button { pointer-events: auto; }
     .site-controls button, .profile-button { border: 1px solid transparent; border-radius: 7px; padding: 8px 11px; color: var(--text-main); background: transparent; cursor: pointer; font-weight: 600; }
     .site-controls button:hover, .profile-button:hover { border-color: var(--glass-border); background: var(--glass-bg); }
     .profile-button { display: flex; align-items: center; gap: 8px; }
@@ -701,7 +705,7 @@
   </div>
 
   <div class="modal-backdrop" id="profileModal">
-    <div class="modal"><div class="modal-header"><h2>Perfil</h2><button class="modal-close" type="button" data-close="profileModal">×</button></div><div class="profile-panel"><span class="profile-avatar" id="profileAvatar">Q</span><strong id="profileName">Visitante</strong><form class="profile-name-form" id="profileNameForm"><input type="text" id="profileNameInput" placeholder="Novo nome" aria-label="Novo nome" required><button type="submit">Salvar</button></form><label class="upload-label">Baixar imagem do computador<input type="file" id="profileImage" accept="image/*"></label><button class="modal-switch" type="button" id="logoutButton">Sair da conta</button></div></div>
+    <div class="modal"><div class="modal-header"><h2>Perfil</h2><button class="modal-close" type="button" data-close="profileModal">×</button></div><div class="profile-panel"><span class="profile-avatar" id="profileAvatar">Q</span><strong id="profileName">Visitante</strong><form class="profile-name-form" id="profileNameForm"><input type="text" id="profileNameInput" placeholder="Novo nome" aria-label="Novo nome" required><button type="submit">Salvar</button></form><label class="upload-label">Enviar imagem do computador<input type="file" id="profileImage" accept="image/*"></label><button class="modal-switch" type="button" id="logoutButton">Sair da conta</button></div></div>
   </div>
 
   <footer class="site-footer">
@@ -779,7 +783,7 @@
     spotLight.shadow.mapSize.height = 2048;
     scene.add(spotLight);
 
-    const fillLight = new THREE.PointLight(0xff6b35, 2, 20);
+    const fillLight = new THREE.PointLight(0x38bdf8, 1.6, 20);
     fillLight.position.set(-6, -2, 4);
     scene.add(fillLight);
 
@@ -797,10 +801,10 @@
     scene.add(atomGroup);
 
     const protonMaterial = new THREE.MeshStandardMaterial({
-      color: 0xff3366,
+      color: 0x14b8a6,
       roughness: 0.2,
       metalness: 0.5,
-      emissive: 0x550011,
+      emissive: 0x063f3a,
       emissiveIntensity: 0.2
     });
 
@@ -828,10 +832,10 @@
 
     window.updateAtomPalette = (mode) => {
       const palettes = {
-        standard: { proton: 0xff3366, neutron: 0x4488ff, electron: 0x00e5ff, orbit: 0x00e5ff },
-        protanopia: { proton: 0xe69f00, neutron: 0x0072b2, electron: 0x009e73, orbit: 0x0072b2 },
-        deuteranopia: { proton: 0xd55e00, neutron: 0x0072b2, electron: 0x56b4e9, orbit: 0x0072b2 },
-        tritanopia: { proton: 0xd55e00, neutron: 0x009e73, electron: 0x0072b2, orbit: 0x009e73 }
+        standard: { proton: 0x14b8a6, neutron: 0x3b82f6, electron: 0x67e8f9, orbit: 0x00e5ff },
+        protanopia: { proton: 0x0f766e, neutron: 0x1d4ed8, electron: 0x22d3ee, orbit: 0x2563eb },
+        deuteranopia: { proton: 0x0e7490, neutron: 0x1e40af, electron: 0x38bdf8, orbit: 0x1d4ed8 },
+        tritanopia: { proton: 0x0f766e, neutron: 0x2563eb, electron: 0x22d3ee, orbit: 0x3b82f6 }
       };
       const palette = palettes[mode] || palettes.standard;
       protonMaterial.color.setHex(palette.proton);
@@ -847,7 +851,7 @@
     const particleCount = 11;
 
     for (let i = 0; i < particleCount; i++) {
-      const isProton = i % 2 === 0;
+      const isProton = i < 5;
       const mesh = new THREE.Mesh(sphereGeo, isProton ? protonMaterial : neutronMaterial);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
@@ -872,7 +876,7 @@
     const electronGroup = new THREE.Group();
     atomGroup.add(electronGroup);
 
-    const orbitRaddi = [2.2, 2.2, 3.8, 3.8, 3.8];
+    const orbitRadii = [2.2, 2.2, 3.8, 3.8, 3.8];
     const orbitRotations = [
       { x: Math.PI / 4, y: 0 },
       { x: -Math.PI / 4, y: Math.PI / 3 },
@@ -883,7 +887,7 @@
 
     const electronMeshes = [];
 
-    orbitRaddi.forEach((radius, i) => {
+    orbitRadii.forEach((radius, i) => {
       const orbitRing = new THREE.Group();
       orbitRing.rotation.x = orbitRotations[i].x;
       orbitRing.rotation.y = orbitRotations[i].y;
@@ -1013,55 +1017,6 @@
 
   
 
-    function openSignup() {
-      signUpMode = true;
-      document.getElementById('nameField').hidden = false;
-      document.getElementById('accountTitle').textContent = 'Cadastro';
-      document.getElementById('accountSubtitle').textContent = 'Crie sua conta para acompanhar seus estudos.';
-      document.getElementById('accountSubmit').textContent = 'Cadastrar';
-      document.getElementById('googleButtonText').textContent = 'Cadastrar com o Google';
-      document.getElementById('switchAccount').textContent = 'Voltar para entrar';
-      document.getElementById('accountStatus').textContent = '';
-      accountModal.classList.add('open');
-    }
-
-    accountButton.addEventListener('click', () => {
-      document.getElementById('accountStatus').textContent = '';
-      openSignup();
-    });
-    document.getElementById('profileButton').addEventListener('click', () => profileModal.classList.add('open'));
-    document.getElementById('whatsappButton').addEventListener('click', (event) => { event.preventDefault(); document.getElementById('whatsappModal').classList.add('open'); });
-    document.querySelectorAll('[data-close]').forEach((button) => button.addEventListener('click', () => document.getElementById(button.dataset.close).classList.remove('open')));
-    document.querySelectorAll('.modal-backdrop').forEach((modal) => modal.addEventListener('click', (event) => { if (event.target === modal) modal.classList.remove('open'); }));
-    document.getElementById('switchAccount').addEventListener('click', () => {
-      signUpMode = !signUpMode;
-      document.getElementById('nameField').hidden = !signUpMode;
-      document.getElementById('accountTitle').textContent = signUpMode ? 'Cadastro' : 'Entrar';
-      document.getElementById('accountSubtitle').textContent = signUpMode ? 'Crie sua conta para acompanhar seus estudos.' : 'Acesse seu espaço de estudos.';
-      document.getElementById('accountSubmit').textContent = signUpMode ? 'Cadastrar' : 'Entrar';
-      document.getElementById('googleButtonText').textContent = signUpMode ? 'Cadastrar com o Google' : 'Entrar com o Google';
-      document.getElementById('switchAccount').textContent = signUpMode ? 'Voltar para entrar' : 'Criar cadastro';
-      document.getElementById('accountStatus').textContent = '';
-    });
-  
-
-
-    document.getElementById('profileImage').addEventListener('change', (event) => {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => { localStorage.setItem('quimica-profile-image', reader.result); updateProfile(); };
-      reader.readAsDataURL(file);
-    });
-    document.getElementById('profileNameForm').addEventListener('submit', (event) => {
-      event.preventDefault();
-      const name = document.getElementById('profileNameInput').value.trim();
-      if (!name) return;
-      const user = storedUser() || { email: '' };
-      localStorage.setItem('quimica-user', JSON.stringify({ ...user, name }));
-      updateProfile();
-    });
-    
     const savedTheme = localStorage.getItem('quimica-theme') || 'dark';
     document.documentElement.dataset.theme = savedTheme;
     const themeButton = document.getElementById('themeButton');
@@ -1069,7 +1024,7 @@
       const isLight = document.documentElement.dataset.theme === 'light';
       const data = languageData && languageData[currentLanguage] ? languageData[currentLanguage] : null;
       themeButton.textContent = data ? (isLight ? data.theme[1] : data.theme[0]) : (isLight ? 'Modo escuro' : 'Modo claro');
-      themeButton.setAttribute('aria-label', isLight ? 'Mudar para modo escuro' : 'Mudar para modo claro');
+      themeButton.setAttribute('aria-label', isLight ? ((uiTranslations[currentLanguage] || uiTranslations.PT).themeDarkAria || 'Mudar para modo escuro') : ((uiTranslations[currentLanguage] || uiTranslations.PT).themeLightAria || 'Mudar para modo claro'));
     }
 
     themeButton.addEventListener('click', () => {
@@ -1093,9 +1048,17 @@
       currentColorMode = mode;
       document.documentElement.dataset.colorMode = mode === 'standard' ? '' : mode;
       const selectedMode = colorModes.find((colorMode) => colorMode.id === mode) || colorModes[0];
-      document.getElementById('colorButton').textContent = 'Mudar de cor';
-      document.getElementById('colorButton').title = `Mudar de cor: ${selectedMode.label}`;
-      document.getElementById('colorButton').setAttribute('aria-label', `Mudar de cor. Paleta atual: ${selectedMode.label}`);
+      const uiNow = uiTranslations[currentLanguage] || uiTranslations.PT;
+      const translatedPalette = ({
+        PT: { standard: 'Cores', protanopia: 'Protanopia', deuteranopia: 'Deuteranopia', tritanopia: 'Tritanopia' },
+        EN: { standard: 'Colors', protanopia: 'Protanopia', deuteranopia: 'Deuteranopia', tritanopia: 'Tritanopia' },
+        '中文': { standard: '颜色', protanopia: '红绿色盲', deuteranopia: '红绿色盲', tritanopia: '蓝黄色盲' },
+        ES: { standard: 'Colores', protanopia: 'Protanopía', deuteranopia: 'Deuteranopía', tritanopia: 'Tritanopía' }
+      }[currentLanguage] || {});
+      const paletteLabel = translatedPalette[mode] || selectedMode.label;
+      document.getElementById('colorButton').textContent = uiNow.color;
+      document.getElementById('colorButton').title = `${uiNow.color}: ${paletteLabel}`;
+      document.getElementById('colorButton').setAttribute('aria-label', `${uiNow.color}. ${uiNow.colorPalette}: ${paletteLabel}`);
       const studioColors = getComputedStyle(document.documentElement);
       document.getElementById('studio-background').style.background = `radial-gradient(circle at 50% 40%, ${studioColors.getPropertyValue('--studio-a')} 0%, ${studioColors.getPropertyValue('--studio-b')} 70%, ${studioColors.getPropertyValue('--studio-c')} 100%)`;
       if (window.updateAtomPalette) window.updateAtomPalette(mode);
@@ -1119,42 +1082,121 @@
       '中文': ['登录', '姓名', '电子邮箱', '密码', '还没有账户？', '创建账户', '个人资料', '从电脑上传图片', '退出账户'],
       ES: ['Entrar', 'Nombre', 'Correo', 'Contraseña', '¿Aún no tienes cuenta?', 'Crear cuenta', 'Perfil', 'Subir imagen desde el ordenador', 'Salir de la cuenta']
     };
+    const uiTranslations = {
+      PT: {
+        title: 'QUÍMICA BGS — Átomo de Boro', themeLightAria: 'Mudar para modo claro', themeDarkAria: 'Mudar para modo escuro', color: 'Mudar de cor', colorPalette: 'Paleta atual', decrease: 'Diminuir texto', increase: 'Aumentar texto',
+        reader: 'Leitura', readerTitle: 'Leitura do site', readerDescription: 'Use os controles para ouvir o conteúdo principal da página.', voice: 'Voz', speed: 'Velocidade', readerLanguage: 'Idioma: Português', read: 'Ler site', pause: 'Pausar', resume: 'Continuar', stop: 'Parar', readerReady: 'Pronto. Clique em “Ler site”.', readerFinished: 'Leitura concluída.', readerDefaultVoice: 'Voz padrão do navegador', of: 'de', readerUnavailable: 'Seu navegador não oferece leitura de voz.',
+        accountButton: 'Entrar', login: 'Entrar', signup: 'Cadastrar', loginSubtitle: 'Acesse seu espaço de estudos.', signupSubtitle: 'Crie sua conta para acompanhar seus estudos.', name: 'Nome', email: 'E-mail', password: 'Senha', emailPlaceholder: 'voce@email.com', passwordPlaceholder: 'Digite sua senha', googleLogin: 'Entrar com o Google', googleSignup: 'Cadastrar com o Google', noAccount: 'Ainda não tem cadastro?', createAccount: 'Criar cadastro', backLogin: 'Voltar para entrar', profile: 'Perfil', visitor: 'Visitante', newName: 'Novo nome', save: 'Salvar', upload: 'Enviar imagem do computador', logout: 'Sair da conta',
+        contact: 'Fale conosco', creatorSite: 'Criador do site e do provão', creatorGame: 'Criador do jogo educacional', talk: 'Conversar', footerTitle: 'Site de ensino sobre química - criado pelos BGS.', footerHelp: 'Se tiver com algum problema no site, no jogo educacional ou no provão entre em contato com nossos integrantes.', whatsappAria: 'Abrir contatos do WhatsApp'
+      },
+      EN: {
+        title: 'QUÍMICA BGS — Boron Atom', themeLightAria: 'Switch to light mode', themeDarkAria: 'Switch to dark mode', color: 'Change color', colorPalette: 'Current palette', decrease: 'Decrease text', increase: 'Increase text',
+        reader: 'Read aloud', readerTitle: 'Read this site aloud', readerDescription: 'Use the controls to listen to the main content of the page.', voice: 'Voice', speed: 'Speed', readerLanguage: 'Language: English', read: 'Read site', pause: 'Pause', resume: 'Resume', stop: 'Stop', readerReady: 'Ready. Click “Read site”.', readerFinished: 'Reading completed.', readerDefaultVoice: 'Browser default voice', of: 'of', readerUnavailable: 'Your browser does not provide speech reading.',
+        accountButton: 'Sign in', login: 'Sign in', signup: 'Sign up', loginSubtitle: 'Access your study space.', signupSubtitle: 'Create your account to track your studies.', name: 'Name', email: 'Email', password: 'Password', emailPlaceholder: 'you@email.com', passwordPlaceholder: 'Enter your password', googleLogin: 'Sign in with Google', googleSignup: 'Sign up with Google', noAccount: "Don\'t have an account?", createAccount: 'Create account', backLogin: 'Back to sign in', profile: 'Profile', visitor: 'Visitor', newName: 'New name', save: 'Save', upload: 'Upload image from computer', logout: 'Sign out',
+        contact: 'Contact us', creatorSite: 'Site and final exam creator', creatorGame: 'Educational game creator', talk: 'Chat', footerTitle: 'Chemistry education site - created by BGS.', footerHelp: 'If you have any problem with the site, educational game or final exam, contact one of our team members.', whatsappAria: 'Open WhatsApp contacts'
+      },
+      '中文': {
+        title: 'QUÍMICA BGS — 硼原子', themeLightAria: '切换到浅色模式', themeDarkAria: '切换到深色模式', color: '更改颜色', colorPalette: '当前调色板', decrease: '减小文字', increase: '增大文字',
+        reader: '朗读', readerTitle: '朗读网站', readerDescription: '使用这些控件收听页面主要内容。', voice: '语音', speed: '速度', readerLanguage: '语言：普通话', read: '朗读网站', pause: '暂停', resume: '继续', stop: '停止', readerReady: '准备好了。点击“朗读网站”。', readerFinished: '朗读完成。', readerDefaultVoice: '浏览器默认语音', of: '共', readerUnavailable: '您的浏览器不支持语音朗读。',
+        accountButton: '登录', login: '登录', signup: '注册', loginSubtitle: '进入您的学习空间。', signupSubtitle: '创建账户以跟踪您的学习。', name: '姓名', email: '电子邮箱', password: '密码', emailPlaceholder: 'you@email.com', passwordPlaceholder: '请输入密码', googleLogin: '使用 Google 登录', googleSignup: '使用 Google 注册', noAccount: '还没有账户？', createAccount: '创建账户', backLogin: '返回登录', profile: '个人资料', visitor: '访客', newName: '新名称', save: '保存', upload: '从电脑上传图片', logout: '退出账户',
+        contact: '联系我们', creatorSite: '网站和最终考试创建者', creatorGame: '教育游戏创建者', talk: '聊天', footerTitle: '化学教育网站——BGS 创建。', footerHelp: '如果您在网站、教育游戏或最终考试中遇到问题，请联系我们的团队成员。', whatsappAria: '打开 WhatsApp 联系人'
+      },
+      ES: {
+        title: 'QUÍMICA BGS — Átomo de Boro', themeLightAria: 'Cambiar a modo claro', themeDarkAria: 'Cambiar a modo oscuro', color: 'Cambiar color', colorPalette: 'Paleta actual', decrease: 'Disminuir texto', increase: 'Aumentar texto',
+        reader: 'Lectura', readerTitle: 'Lectura del sitio', readerDescription: 'Usa los controles para escuchar el contenido principal de la página.', voice: 'Voz', speed: 'Velocidad', readerLanguage: 'Idioma: Español', read: 'Leer sitio', pause: 'Pausar', resume: 'Continuar', stop: 'Detener', readerReady: 'Listo. Haz clic en “Leer sitio”.', readerFinished: 'Lectura completada.', readerDefaultVoice: 'Voz predeterminada del navegador', of: 'de', readerUnavailable: 'Tu navegador no ofrece lectura por voz.',
+        accountButton: 'Entrar', login: 'Entrar', signup: 'Registrarse', loginSubtitle: 'Accede a tu espacio de estudio.', signupSubtitle: 'Crea tu cuenta para seguir tus estudios.', name: 'Nombre', email: 'Correo', password: 'Contraseña', emailPlaceholder: 'tu@email.com', passwordPlaceholder: 'Escribe tu contraseña', googleLogin: 'Entrar con Google', googleSignup: 'Registrarse con Google', noAccount: '¿Aún no tienes cuenta?', createAccount: 'Crear cuenta', backLogin: 'Volver a entrar', profile: 'Perfil', visitor: 'Visitante', newName: 'Nuevo nombre', save: 'Guardar', upload: 'Subir imagen desde el ordenador', logout: 'Salir de la cuenta',
+        contact: 'Contáctanos', creatorSite: 'Creador del sitio y del examen final', creatorGame: 'Creador del juego educativo', talk: 'Conversar', footerTitle: 'Sitio educativo de química - creado por BGS.', footerHelp: 'Si tienes algún problema con el sitio, el juego educativo o el examen final, contacta con uno de nuestros integrantes.', whatsappAria: 'Abrir contactos de WhatsApp'
+      }
+    };
+    window.siteT = function(key) { const data = uiTranslations[currentLanguage] || uiTranslations.PT; return data[key] || uiTranslations.PT[key] || key; };
+
     let currentLanguage = localStorage.getItem('quimica-language') || 'PT';
     const setText = (selector, value) => { const element = document.querySelector(selector); if (element) element.textContent = value; };
     function applyLanguage(language) {
-      const data = languageData[language];
+      const data = languageData[language] || languageData.PT;
       currentLanguage = language;
+      const ui = uiTranslations[language] || uiTranslations.PT;
       document.documentElement.lang = data.html;
+      document.title = ui.title;
       document.getElementById('languageButton').textContent = language;
-      updateThemeButton();
+
       document.querySelectorAll('.tag').forEach((element, index) => { if (data.tags[index]) element.textContent = data.tags[index]; });
-      document.querySelectorAll('.content-overlay .section').forEach((section, index) => { setText(`.content-overlay .section:nth-child(${index + 1}) h1, .content-overlay .section:nth-child(${index + 1}) h2`, data.titles[index]); setText(`.content-overlay .section:nth-child(${index + 1}) p`, data.atom[index]); });
-      setText('.scroll-indicator span', data.scroll); setText('.extra-content h2', data.content[0]); setText('.extra-intro', data.content[1]);
-      setText('#readerLanguage', `Idioma: ${language === 'PT' ? 'Português' : language === 'EN' ? 'English' : language === '中文' ? '普通话' : 'Español'}`);
-      document.querySelectorAll('.content-links a').forEach((element, index) => { element.textContent = data.nav[index]; });
-      document.querySelectorAll('.resource-card h3').forEach((element, index) => { element.textContent = data.cards[index]; });
-      document.querySelectorAll('.resource-card .tag').forEach((element, index) => { element.textContent = data.cardTags[index]; });
-      document.querySelectorAll('.resource-card p').forEach((element, index) => { element.textContent = data.cardText[index]; });
-      document.querySelectorAll('.resource-card a').forEach((element, index) => { element.textContent = data.links[index]; });
-      document.getElementById('accountLabel').textContent = 'Cadastrar';
-      const accountText = accountTranslations[language];
-      document.getElementById('accountTitle').textContent = signUpMode ? accountText[5] : accountText[0];
-      document.querySelector('#nameField').childNodes[0].textContent = accountText[1];
-      document.querySelector('.account-form label:nth-of-type(2)').childNodes[0].textContent = accountText[2];
-      document.querySelector('.account-form label:nth-of-type(3)').childNodes[0].textContent = accountText[3];
-      document.getElementById('accountSubmit').textContent = signUpMode ? accountText[5] : accountText[0];
-      document.querySelector('.account-form p').childNodes[0].textContent = `${accountText[4]} `;
-      document.getElementById('switchAccount').textContent = signUpMode ? accountText[0] : accountText[5];
-      document.querySelector('#profileModal h2').textContent = accountText[6];
-      document.querySelector('.upload-label').childNodes[0].textContent = accountText[7];
-      document.getElementById('logoutButton').textContent = accountText[8];
+      document.querySelectorAll('.content-overlay .section').forEach((section, index) => {
+        const title = section.querySelector('h1, h2');
+        const paragraph = section.querySelector('p');
+        if (title && data.titles[index]) title.textContent = data.titles[index];
+        if (paragraph && data.atom[index]) paragraph.textContent = data.atom[index];
+      });
+      setText('.scroll-indicator span', data.scroll);
+      setText('.extra-content h2', data.content[0]);
+      setText('.extra-intro', data.content[1]);
+      document.querySelectorAll('.content-links a').forEach((element, index) => { if (data.nav[index]) element.textContent = data.nav[index]; });
+      document.querySelectorAll('.resource-card h3').forEach((element, index) => { if (data.cards[index]) element.textContent = data.cards[index]; });
+      document.querySelectorAll('.resource-card .tag').forEach((element, index) => { if (data.cardTags[index]) element.textContent = data.cardTags[index]; });
+      document.querySelectorAll('.resource-card p').forEach((element, index) => { if (data.cardText[index]) element.textContent = data.cardText[index]; });
+      document.querySelectorAll('.resource-card a').forEach((element, index) => { if (data.links[index]) element.textContent = data.links[index]; });
+
+      document.getElementById('colorButton').textContent = ui.color;
+      document.getElementById('colorButton').title = ui.color + ': ' + ui.colorPalette;
+      document.getElementById('colorButton').setAttribute('aria-label', ui.color + '. ' + ui.colorPalette);
+      document.getElementById('decreaseTextButton').title = ui.decrease;
+      document.getElementById('decreaseTextButton').setAttribute('aria-label', ui.decrease);
+      document.getElementById('increaseTextButton').title = ui.increase;
+      document.getElementById('increaseTextButton').setAttribute('aria-label', ui.increase);
+      document.getElementById('readerButton').setAttribute('aria-label', ui.reader);
+      document.querySelector('#readerButton span').textContent = ui.reader;
+
+      setText('#readerTitle', ui.readerTitle); setText('#readerDescription', ui.readerDescription); setText('.reader-settings label[for="readerVoice"]', ui.voice);
+      const speedLabel = document.querySelector('.reader-settings label[for="readerRate"]');
+      if (speedLabel) speedLabel.firstChild.textContent = ui.speed + ' ';
+      setText('#readerLanguage', ui.readerLanguage); setText('#readStart', ui.read); setText('#readPause', ui.pause); setText('#readResume', ui.resume); setText('#readStop', ui.stop);
+
+      document.getElementById('accountLabel').textContent = ui.accountButton;
+      const accountText = accountTranslations[language] || accountTranslations.PT;
+      document.getElementById('accountTitle').textContent = signUpMode ? ui.signup : ui.login;
+      document.getElementById('accountSubtitle').textContent = signUpMode ? ui.signupSubtitle : ui.loginSubtitle;
+      document.querySelector('#nameField').childNodes[0].textContent = ui.name;
+      document.querySelector('#nameField input').placeholder = ui.name;
+      document.querySelector('.account-form label:nth-of-type(2)').childNodes[0].textContent = ui.email;
+      document.querySelector('.account-form label:nth-of-type(2) input').placeholder = ui.emailPlaceholder;
+      document.querySelector('.account-form label:nth-of-type(3)').childNodes[0].textContent = ui.password;
+      document.querySelector('.account-form label:nth-of-type(3) input').placeholder = ui.passwordPlaceholder;
+      document.getElementById('accountSubmit').textContent = signUpMode ? ui.signup : ui.login;
+      document.getElementById('googleButtonText').textContent = signUpMode ? ui.googleSignup : ui.googleLogin;
+      document.querySelector('.account-form p').childNodes[0].textContent = ui.noAccount + ' ';
+      document.getElementById('switchAccount').textContent = signUpMode ? ui.login : ui.createAccount;
+      document.querySelector('#profileModal h2').textContent = ui.profile;
+      document.getElementById('profileName').textContent = document.getElementById('profileName').textContent === 'Visitante' || document.getElementById('profileName').textContent === 'Visitor' || document.getElementById('profileName').textContent === '访客' || document.getElementById('profileName').textContent === 'Visitante' ? ui.visitor : document.getElementById('profileName').textContent;
+      document.getElementById('profileNameInput').placeholder = ui.newName;
+      document.getElementById('profileNameInput').setAttribute('aria-label', ui.newName);
+      document.querySelector('.profile-name-form button').textContent = ui.save;
+      document.querySelector('.upload-label').childNodes[0].textContent = ui.upload;
+      document.getElementById('logoutButton').textContent = ui.logout;
+      document.querySelector('#whatsappModal .modal-header h2').textContent = ui.contact;
+      const contacts = document.querySelectorAll('.whatsapp-contact');
+      if (contacts[0]) contacts[0].querySelector('strong').textContent = ui.creatorSite;
+      if (contacts[1]) contacts[1].querySelector('strong').textContent = ui.creatorGame;
+      document.querySelectorAll('.whatsapp-contact a').forEach(a => a.textContent = ui.talk);
+      document.querySelector('.footer-title').textContent = ui.footerTitle;
+      document.querySelector('.footer-help').textContent = ui.footerHelp;
+      document.getElementById('whatsappButton').setAttribute('aria-label', ui.whatsappAria);
+      document.getElementById('whatsappButton').title = 'WhatsApp';
+
+      updateThemeButton();
       localStorage.setItem('quimica-language', language);
+      if (typeof applyColorMode === 'function') applyColorMode(currentColorMode);
+      if (typeof window.quimicaReaderLanguageChanged === 'function') {
+        try { window.quimicaReaderLanguageChanged(); } catch (e) {}
+      } else if (typeof loadReaderVoices === 'function') {
+        try { loadReaderVoices(); } catch (e) {}
+      }
     }
     document.getElementById('languageButton').addEventListener('click', () => applyLanguage(languages[(languages.indexOf(currentLanguage) + 1) % languages.length]));
     applyLanguage(currentLanguage);
-    updateProfile();
 
     // --- LEITOR DE VOZ NATIVO (Web Speech API) ---
+    // Leitor robusto: velocidade/voz aplicadas imediatamente, pausa/continuação
+    // preservadas e idioma sempre sincronizado com o idioma do site.
     const readerPanel = document.getElementById('readerPanel');
     const readerButton = document.getElementById('readerButton');
     const readerStatus = document.getElementById('readerLanguage');
@@ -1169,20 +1211,30 @@
 
     const synth = window.speechSynthesis || null;
     let voices = [];
+    let availableVoices = [];
     let chunks = [];
     let chunkIndex = 0;
     let reading = false;
-    let paused = false;
+    let restarting = false;
+    let languageChanging = false;
     let currentUtterance = null;
-    let advancing = false;
+    let savedPaused = false;
 
     function readerLang() {
       const lang = (document.documentElement.lang || 'pt-BR').toLowerCase();
-      if (lang === 'pt') return 'pt-BR';
-      if (lang === 'en') return 'en-US';
-      if (lang === 'es') return 'es-ES';
-      if (lang.startsWith('zh')) return 'zh-CN';
+      if (lang === 'pt' || lang.startsWith('pt-')) return 'pt-BR';
+      if (lang === 'en' || lang.startsWith('en-')) return 'en-US';
+      if (lang === 'es' || lang.startsWith('es-')) return 'es-ES';
+      if (lang === 'zh' || lang.startsWith('zh-')) return 'zh-CN';
       return lang;
+    }
+
+    function languageBase() {
+      return readerLang().split('-')[0];
+    }
+
+    function readerMessage(key, fallback) {
+      return window.siteT ? window.siteT(key) : fallback;
     }
 
     function readableContent() {
@@ -1200,85 +1252,105 @@
     function splitText(text) {
       const max = 180;
       const result = [];
-      const parts = text.split(/(?<=[.!?;:])\s+/);
+      const parts = text.match(/[^.!?。！？；：]+[.!?。！？；：]+|[^.!?。！？；：]+$/g) || [text];
       let buffer = '';
-      for (const part of parts) {
+      for (const raw of parts) {
+        let part = raw.trim();
         if (!part) continue;
         if ((buffer + ' ' + part).trim().length <= max) {
           buffer = (buffer + ' ' + part).trim();
         } else {
           if (buffer) result.push(buffer);
-          if (part.length <= max) buffer = part;
-          else {
-            for (let i = 0; i < part.length; i += max) result.push(part.slice(i, i + max));
-            buffer = '';
+          while (part.length > max) {
+            result.push(part.slice(0, max));
+            part = part.slice(max);
           }
+          buffer = part;
         }
       }
       if (buffer) result.push(buffer);
       return result;
     }
 
-    function loadReaderVoices() {
-      if (!synth) return;
+    function getLanguageVoices() {
+      const wanted = readerLang().toLowerCase();
+      const base = languageBase();
+      const exact = voices.filter(v => v.lang && v.lang.toLowerCase() === wanted);
+      const regional = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(base + '-'));
+      return exact.length ? exact : regional;
+    }
+
+    function loadReaderVoices(preferredName = null) {
+      if (!synth || !readerVoice) return;
       voices = synth.getVoices() || [];
-      const lang = readerLang();
-      const base = lang.split('-')[0];
-      const matches = voices.filter(v => v.lang && (v.lang.toLowerCase() === lang || v.lang.toLowerCase().startsWith(base + '-')));
-      const list = matches.length ? matches : voices;
+      const matches = getLanguageVoices();
+      availableVoices = matches.length ? matches : [];
+      const previous = preferredName || localStorage.getItem('quimica-reader-voice-' + languageBase());
       readerVoice.innerHTML = '';
-      list.forEach((voice, i) => {
-        const opt = document.createElement('option');
-        opt.value = String(i);
-        opt.textContent = `${voice.name} (${voice.lang})`;
-        opt.dataset.name = voice.name;
-        opt.dataset.lang = voice.lang;
-        readerVoice.appendChild(opt);
-      });
-      if (!list.length) {
+
+      if (!availableVoices.length) {
         const opt = document.createElement('option');
         opt.value = '';
-        opt.textContent = 'Voz padrão do navegador';
+        opt.textContent = readerMessage('readerDefaultVoice', 'Voz padrão do navegador');
+        opt.dataset.name = '';
+        opt.dataset.lang = readerLang();
         readerVoice.appendChild(opt);
+        return;
       }
+
+      availableVoices.forEach((v, index) => {
+        const opt = document.createElement('option');
+        opt.value = String(index);
+        opt.textContent = `${v.name} (${v.lang})`;
+        opt.dataset.name = v.name;
+        opt.dataset.lang = v.lang;
+        readerVoice.appendChild(opt);
+      });
+
+      let selected = availableVoices.findIndex(v => v.name === previous);
+      if (selected < 0) selected = 0;
+      readerVoice.selectedIndex = selected;
     }
 
     function getSelectedVoice() {
-      const opt = readerVoice.options[readerVoice.selectedIndex];
-      if (!opt) return null;
-      return voices.find(v => v.name === opt.dataset.name && v.lang === opt.dataset.lang) || null;
+      const opt = readerVoice && readerVoice.options[readerVoice.selectedIndex];
+      if (!opt || !opt.dataset.name) return null;
+      return availableVoices.find(v => v.name === opt.dataset.name && v.lang === opt.dataset.lang) || null;
     }
 
     function updateReaderUI() {
       const speaking = !!(synth && synth.speaking);
       const browserPaused = !!(synth && synth.paused);
-      readStart.disabled = reading && (speaking || browserPaused);
-      readPause.disabled = !speaking || browserPaused;
-      readResume.disabled = !browserPaused;
-      readStop.disabled = !reading && !speaking && !browserPaused;
+      if (readStart) readStart.disabled = reading && (speaking || browserPaused);
+      if (readPause) readPause.disabled = !speaking || browserPaused;
+      if (readResume) readResume.disabled = !(browserPaused || (!reading && chunks.length && chunkIndex < chunks.length));
+      if (readStop) readStop.disabled = !reading && !speaking && !browserPaused;
     }
 
     function setProgress() {
+      if (!readerProgressBar) return;
       const value = chunks.length ? (chunkIndex / chunks.length) * 100 : 0;
       readerProgressBar.style.width = `${Math.min(100, value)}%`;
     }
 
-    function stopReader(message = 'Leitura parada') {
-      reading = false;
-      paused = false;
-      advancing = false;
-      if (synth) synth.cancel();
+    function setRateLabel() {
+      if (!readerRateValue || !readerRate) return;
+      readerRateValue.textContent = `${Number(readerRate.value).toFixed(1).replace('.', ',')}x`;
+    }
+
+    function cancelSpeech() {
+      if (!synth) return;
+      try { synth.cancel(); } catch (_) {}
       currentUtterance = null;
-      readerStatus.textContent = message;
-      updateReaderUI();
     }
 
     function speakChunk() {
       if (!synth || !reading || chunkIndex >= chunks.length) {
         if (reading) {
           reading = false;
-          readerStatus.textContent = 'Leitura concluída';
-          readerProgressBar.style.width = '100%';
+          currentUtterance = null;
+          if (readerProgressBar) readerProgressBar.style.width = '100%';
+          readerStatus.textContent = readerMessage('readerFinished', 'Leitura concluída.');
           updateReaderUI();
         }
         return;
@@ -1287,183 +1359,239 @@
       const text = chunks[chunkIndex];
       const u = new SpeechSynthesisUtterance(text);
       currentUtterance = u;
-      u.lang = readerLang();
-      u.rate = parseFloat(readerRate.value) || 1;
+      u.rate = Math.max(0.6, Math.min(1.5, Number(readerRate && readerRate.value) || 1));
       u.pitch = 1;
       u.volume = 1;
+
       const voice = getSelectedVoice();
+      // O idioma do site é sempre a prioridade. Se houver voz compatível,
+      // usamos exatamente essa voz; caso contrário, o navegador tenta usar
+      // a voz padrão para o lang definido.
+      u.lang = readerLang();
       if (voice) {
         u.voice = voice;
         u.lang = voice.lang;
       }
 
       u.onstart = () => {
-        paused = false;
-        advancing = false;
-        readerStatus.textContent = `Lendo ${chunkIndex + 1} de ${chunks.length}...`;
+        if (currentUtterance !== u) return;
+        savedPaused = false;
+        if (readerStatus) readerStatus.textContent = `${readerMessage('reader', 'Leitura')} ${chunkIndex + 1} ${readerMessage('of', 'de')} ${chunks.length}...`;
         setProgress();
         updateReaderUI();
       };
 
       u.onend = () => {
-        if (!reading || currentUtterance !== u) return;
+        if (currentUtterance !== u) return;
+        currentUtterance = null;
+        if (restarting || languageChanging) return;
+        if (!reading) return;
         chunkIndex++;
         setProgress();
         if (chunkIndex >= chunks.length) {
           reading = false;
-          currentUtterance = null;
-          readerStatus.textContent = 'Leitura concluída';
-          readerProgressBar.style.width = '100%';
+          if (readerProgressBar) readerProgressBar.style.width = '100%';
+          if (readerStatus) readerStatus.textContent = readerMessage('readerFinished', 'Leitura concluída.');
           updateReaderUI();
           return;
         }
-        // Chrome pode falhar quando speak() é chamado imediatamente após onend.
-        advancing = true;
-        setTimeout(() => {
-          advancing = false;
-          if (reading) speakChunk();
-        }, 80);
+        // Pequeno intervalo evita falhas do SpeechSynthesis no Chrome/Edge.
+        setTimeout(() => { if (reading && !restarting && !languageChanging) speakChunk(); }, 90);
       };
 
       u.onerror = (event) => {
-        if (!reading || currentUtterance !== u) return;
-        const error = event && event.error ? event.error : 'unknown';
-        if (error === 'canceled' || error === 'interrupted') return;
-        reading = false;
+        if (currentUtterance !== u) return;
         currentUtterance = null;
-        readerStatus.textContent = `Erro de voz: ${error}. Tente novamente.`;
+        const error = event && event.error ? event.error : 'unknown';
+        if (restarting || languageChanging || error === 'canceled' || error === 'interrupted') return;
+        reading = false;
+        if (readerStatus) readerStatus.textContent = `${readerMessage('reader', 'Leitura')}: ${error}.`;
         updateReaderUI();
       };
 
       try {
-        // Alguns navegadores ficam presos em estado pausado após cancel/resume.
         synth.resume();
         synth.speak(u);
-      } catch (err) {
+      } catch (error) {
+        currentUtterance = null;
         reading = false;
-        readerStatus.textContent = 'Não foi possível iniciar a voz. Verifique o áudio do computador e tente novamente.';
+        if (readerStatus) readerStatus.textContent = readerMessage('readerUnavailable', 'Não foi possível iniciar a leitura.');
         updateReaderUI();
       }
     }
 
-    function startReader() {
+    function startReader(fromCurrent = false) {
       if (!synth || typeof SpeechSynthesisUtterance !== 'function') {
-        readerStatus.textContent = 'Seu navegador não disponibiliza leitura de voz. Use Chrome ou Edge atualizado.';
+        readerStatus.textContent = readerMessage('readerUnavailable', 'Seu navegador não disponibiliza leitura de voz.');
         return;
       }
 
-      const text = readableContent().join('. ');
-      if (!text.trim()) {
-        readerStatus.textContent = 'Não encontrei texto para ler.';
-        return;
+      if (!fromCurrent) {
+        const text = readableContent().join('. ');
+        if (!text.trim()) {
+          readerStatus.textContent = readerMessage('readerDescription', 'Não encontrei conteúdo para ler.');
+          return;
+        }
+        chunks = splitText(text);
+        chunkIndex = 0;
+      } else if (!chunks.length || chunkIndex >= chunks.length) {
+        return startReader(false);
       }
 
-      // Cancela qualquer fila antiga e reinicia do zero.
-      synth.cancel();
+      cancelSpeech();
+      restarting = false;
+      languageChanging = false;
       reading = true;
-      paused = false;
-      chunks = splitText(text);
-      chunkIndex = 0;
-      readerProgressBar.style.width = '0%';
-      readerStatus.textContent = `Preparando leitura em ${readerLang()}...`;
+      savedPaused = false;
+      if (!fromCurrent) setProgress();
+      readerStatus.textContent = `${readerMessage('reader', 'Leitura')}...`;
       updateReaderUI();
-
-      // resume() + speak() aqui mantém o início associado ao clique do usuário.
-      synth.resume();
-      speakChunk();
+      setTimeout(() => { if (reading) speakChunk(); }, 40);
     }
 
-    window.toggleReaderPanel = function(event) {
-      if (event) event.preventDefault();
-      const panel = document.getElementById('readerPanel');
-      const button = document.getElementById('readerButton');
-      if (!panel || !button) return;
-      const open = !panel.classList.contains('open');
-      panel.classList.toggle('open', open);
-      button.setAttribute('aria-expanded', String(open));
-      if (open) {
-        try { loadReaderVoices(); } catch (e) {}
-        try { updateReaderUI(); } catch (e) {}
+    function restartCurrentChunk() {
+      if (!reading || !chunks.length || chunkIndex >= chunks.length) return;
+      restarting = true;
+      cancelSpeech();
+      setTimeout(() => {
+        restarting = false;
+        if (reading) speakChunk();
+      }, 60);
+    }
+
+    // Chamado pelo seletor de idioma do site. Se a leitura estava ativa,
+    // reinicia o trecho atual já com o idioma/voz novos.
+    window.quimicaReaderLanguageChanged = function () {
+      if (!synth) return;
+      const wasReading = reading;
+      languageChanging = true;
+      cancelSpeech();
+
+      // O conteúdo já foi traduzido por applyLanguage(). Recriamos a fila para
+      // impedir que o leitor continue usando frases do idioma anterior.
+      if (wasReading) {
+        const text = readableContent().join('. ');
+        chunks = splitText(text);
+        chunkIndex = 0;
+        setProgress();
+      }
+
+      loadReaderVoices();
+      if (wasReading && chunks.length) {
+        reading = true;
+        setTimeout(() => {
+          languageChanging = false;
+          if (reading) speakChunk();
+        }, 120);
+      } else {
+        languageChanging = false;
+        updateReaderUI();
       }
     };
 
-    readStart.addEventListener('click', startReader);
+    window.quimicaReaderToggle = function (event) {
+      if (event) { event.preventDefault(); event.stopPropagation(); }
+      if (!readerPanel || !readerButton) return false;
+      const open = !readerPanel.classList.contains('open');
+      readerPanel.classList.toggle('open', open);
+      readerButton.setAttribute('aria-expanded', String(open));
+      if (open) {
+        loadReaderVoices();
+        readerStatus.textContent = synth
+          ? readerMessage('readerReady', 'Pronto. Clique em “Ler site”.')
+          : readerMessage('readerUnavailable', 'Seu navegador não oferece leitura de voz.');
+        updateReaderUI();
+      }
+      return false;
+    };
+
+    readStart.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      startReader(false);
+    });
 
     readPause.addEventListener('click', () => {
       if (synth && synth.speaking && !synth.paused) {
         synth.pause();
-        paused = true;
-        readerStatus.textContent = 'Leitura pausada';
+        savedPaused = true;
+        readerStatus.textContent = readerMessage('pause', 'Leitura pausada.') + '.';
         updateReaderUI();
       }
     });
 
     readResume.addEventListener('click', () => {
-      if (synth && synth.paused) {
+      if (!synth) return;
+      if (synth.paused) {
         synth.resume();
-        paused = false;
-        readerStatus.textContent = `Lendo ${chunkIndex + 1} de ${chunks.length}...`;
+        savedPaused = false;
+        readerStatus.textContent = `${readerMessage('resume', 'Continuando')}...`;
         updateReaderUI();
-      } else if (!reading) {
-        startReader();
+        return;
+      }
+      // Depois de trocar a voz enquanto estava pausado, cancel() encerra a
+      // utterance anterior. Continuar então fala novamente o trecho atual.
+      if (reading && savedPaused && chunks.length && chunkIndex < chunks.length) {
+        savedPaused = false;
+        readerStatus.textContent = `${readerMessage('resume', 'Continuando')}...`;
+        setTimeout(() => { if (reading) speakChunk(); }, 40);
+        updateReaderUI();
+        return;
+      }
+      // Se a fala já terminou, continua do último trecho, em vez de voltar ao início.
+      if (!reading && chunks.length && chunkIndex < chunks.length) {
+        startReader(true);
       }
     });
 
-    readStop.addEventListener('click', () => stopReader());
-
-    readerRate.addEventListener('input', () => {
-      readerRateValue.textContent = `${parseFloat(readerRate.value).toFixed(1).replace('.', ',')}x`;
+    readStop.addEventListener('click', () => {
+      reading = false;
+      restarting = false;
+      languageChanging = false;
+      cancelSpeech();
+      readerStatus.textContent = readerMessage('stop', 'Leitura parada.') + '.';
+      updateReaderUI();
     });
 
+    readerRate.addEventListener('input', () => {
+      setRateLabel();
+      // A velocidade passa a valer imediatamente, sem precisar esperar
+      // terminar o parágrafo atual.
+      if (reading && synth && synth.speaking && !synth.paused) restartCurrentChunk();
+    });
+
+    readerVoice.addEventListener('change', () => {
+      const voice = getSelectedVoice();
+      if (voice) localStorage.setItem('quimica-reader-voice-' + languageBase(), voice.name);
+      // Troca de voz também vale para a fala atual. Se estava pausada,
+      // mantemos a pausa e o botão Continuar retoma com a nova voz.
+      if (reading && synth) {
+        const wasPaused = synth.paused;
+        if (synth.speaking || wasPaused) {
+          savedPaused = wasPaused;
+          restarting = true;
+          cancelSpeech();
+          restarting = false;
+          if (!wasPaused) {
+            setTimeout(() => { if (reading) speakChunk(); }, 60);
+          }
+          updateReaderUI();
+        }
+      }
+    });
+
+    setRateLabel();
     if (synth) {
       loadReaderVoices();
-      if ('onvoiceschanged' in synth) synth.onvoiceschanged = loadReaderVoices;
+      if ('onvoiceschanged' in synth) synth.addEventListener('voiceschanged', () => loadReaderVoices());
     }
     updateReaderUI();
 
+    // Compatibilidade com o botão antigo.
+    window.toggleReaderPanel = window.quimicaReaderToggle;
+
     if (window.VLibras) new window.VLibras.Widget('https://vlibras.gov.br/app');
-  </script>
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-  import {
-    getAuth,
-    GoogleAuthProvider,
-    signInWithPopup
-  } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBdE6L9ZxlsboLGwIvijETKSXlds336QU4",
-    authDomain: "tcc-bgs.firebaseapp.com",
-    projectId: "tcc-bgs",
-    storageBucket: "tcc-bgs.firebasestorage.app",
-    messagingSenderId: "439847454822",
-    appId: "1:439847454822:web:2e214db7f94341d67545a7"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-
-  document.getElementById("googleLogin").addEventListener("click", async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-
-      const user = result.user;
-
-      console.log("Usuário logado:", user);
-      console.log("Nome:", user.displayName);
-      console.log("Email:", user.email);
-      console.log("Foto:", user.photoURL);
-
-      // Exemplo:
-      // window.location.href = "dashboard.html";
-
-    } catch (error) {
-      console.error("Erro ao fazer login com Google:", error);
-
-      alert("Não foi possível entrar com o Google.");
-    }
-  });
 </script>
   <script type="module">
 
@@ -1550,7 +1678,7 @@ const firebaseConfig = {
     document.getElementById("accountSubmit");
 
   const googleSubmit =
-    document.getElementById("googleSubmit");
+    document.getElementById("googleLogin");
 
   const googleButtonText =
     document.getElementById("googleButtonText");
@@ -1591,6 +1719,44 @@ const firebaseConfig = {
   const profileAvatar =
     document.getElementById("profileAvatar");
 
+  const profileImage =
+    document.getElementById("profileImage");
+
+  function renderAvatar(element, name, photoUrl) {
+    if (!element) return;
+    element.textContent = "";
+    if (photoUrl) {
+      const img = document.createElement("img");
+      img.src = photoUrl;
+      img.alt = "";
+      img.loading = "lazy";
+      element.appendChild(img);
+    } else {
+      element.textContent = (name || "Q").charAt(0).toUpperCase();
+    }
+  }
+
+  if (profileImage) {
+    profileImage.addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file || !file.type.startsWith("image/")) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          localStorage.setItem("quimica-profile-image", reader.result);
+          const user = auth.currentUser;
+          const name = user?.displayName || user?.email?.split("@")[0] || "Q";
+          renderAvatar(headerAvatar, name, reader.result);
+          renderAvatar(profileAvatar, name, reader.result);
+        } catch (error) {
+          console.error("Erro ao salvar imagem do perfil:", error);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
 
   // ==========================================
   // MODO LOGIN / CADASTRO
@@ -1599,12 +1765,30 @@ const firebaseConfig = {
   let signUpMode = false;
 
 
+  window.translateAuthMessage = function (mensagem) {
+    const lang = document.documentElement.lang || 'pt-BR';
+    const maps = {
+      EN: {
+        'Digite seu nome.':'Enter your name.', 'Digite seu e-mail.':'Enter your email.', 'Digite sua senha.':'Enter your password.', 'A senha precisa ter pelo menos 6 caracteres.':'Password must be at least 6 characters.', 'Criando sua conta...':'Creating your account...', 'Cadastro realizado com sucesso!':'Account created successfully!', 'Verificando seus dados...':'Checking your information...', 'Seu perfil não foi encontrado no Firestore.':'Your profile was not found in Firestore.', 'O nome não corresponde ao cadastro.':'The name does not match the account.', 'Login realizado com sucesso!':'Signed in successfully!', 'Abrindo o Google...':'Opening Google...', 'Login com Google realizado!':'Signed in with Google successfully!', 'Erro ao carregar perfil:':'Error loading profile:', 'Erro ao alterar o nome: ':'Error changing name: ', 'E-mail ou senha incorretos.':'Incorrect email or password.', 'Senha incorreta.':'Incorrect password.', 'Usuário não encontrado.':'User not found.', 'Digite um e-mail válido.':'Enter a valid email.', 'A janela do Google foi fechada.':'The Google window was closed.', 'Nenhum usuário conectado.':'No user is signed in.'
+      },
+      ES: {
+        'Digite seu nome.':'Escribe tu nombre.', 'Digite seu e-mail.':'Escribe tu correo.', 'Digite sua senha.':'Escribe tu contraseña.', 'A senha precisa ter pelo menos 6 caracteres.':'La contraseña debe tener al menos 6 caracteres.', 'Criando sua conta...':'Creando tu cuenta...', 'Cadastro realizado com sucesso!':'¡Cuenta creada correctamente!', 'Verificando seus dados...':'Verificando tus datos...', 'Seu perfil não foi encontrado no Firestore.':'No se encontró tu perfil en Firestore.', 'O nome não corresponde ao cadastro.':'El nombre no coincide con la cuenta.', 'Login realizado com sucesso!':'¡Inicio de sesión correcto!', 'Abrindo o Google...':'Abriendo Google...', 'Login com Google realizado!':'¡Inicio de sesión con Google correcto!', 'E-mail ou senha incorretos.':'Correo o contraseña incorrectos.', 'Senha incorreta.':'Contraseña incorrecta.', 'Usuário não encontrado.':'Usuario no encontrado.', 'Digite um e-mail válido.':'Escribe un correo válido.', 'A janela do Google foi fechada.':'La ventana de Google se cerró.', 'Nenhum usuário conectado.':'No hay ningún usuario conectado.'
+      },
+      'zh-CN': {
+        'Digite seu nome.':'请输入您的姓名。', 'Digite seu e-mail.':'请输入电子邮箱。', 'Digite sua senha.':'请输入密码。', 'A senha precisa ter pelo menos 6 caracteres.':'密码至少需要6个字符。', 'Criando sua conta...':'正在创建账户……', 'Cadastro realizado com sucesso!':'账户创建成功！', 'Verificando seus dados...':'正在验证您的信息……', 'Seu perfil não foi encontrado no Firestore.':'未在 Firestore 中找到您的个人资料。', 'O nome não corresponde ao cadastro.':'姓名与账户不匹配。', 'Login realizado com sucesso!':'登录成功！', 'Abrindo o Google...':'正在打开 Google……', 'Login com Google realizado!':'使用 Google 登录成功！', 'E-mail ou senha incorretos.':'电子邮箱或密码错误。', 'Senha incorreta.':'密码错误。', 'Usuário não encontrado.':'未找到用户。', 'Digite um e-mail válido.':'请输入有效的电子邮箱。', 'A janela do Google foi fechada.':'Google 窗口已关闭。', 'Nenhum usuário conectado.':'当前没有登录用户。'
+      }
+    };
+    const key = lang.startsWith('en')?'EN':lang.startsWith('es')?'ES':lang.startsWith('zh')?'zh-CN':'PT';
+    const map = maps[key] || {};
+    return map[mensagem] || mensagem;
+  };
+
   function mostrarStatus(mensagem, erro = false) {
 
-    accountStatus.textContent = mensagem;
+    accountStatus.textContent = window.translateAuthMessage ? window.translateAuthMessage(mensagem) : mensagem;
 
     accountStatus.style.color =
-      erro ? "#ff6b6b" : "var(--accent-cyan)";
+      erro ? "var(--error-color, #d55e00)" : "var(--accent-cyan)";
   }
 
 
@@ -1614,18 +1798,15 @@ const firebaseConfig = {
 
     nameField.hidden = true;
 
-    accountTitle.textContent = "Entrar";
+    accountTitle.textContent = window.siteT('login');
 
-    accountSubtitle.textContent =
-      "Acesse seu espaço de estudos.";
+    accountSubtitle.textContent = window.siteT('loginSubtitle');
 
-    accountSubmit.textContent = "Entrar";
+    accountSubmit.textContent = window.siteT('login');
 
-    googleButtonText.textContent =
-      "Entrar com o Google";
+    googleButtonText.textContent = window.siteT('googleLogin');
 
-    switchAccount.textContent =
-      "Criar cadastro";
+    switchAccount.textContent = window.siteT('createAccount');
 
     mostrarStatus("");
 
@@ -1638,20 +1819,15 @@ const firebaseConfig = {
 
     nameField.hidden = false;
 
-    accountTitle.textContent =
-      "Cadastro";
+    accountTitle.textContent = window.siteT('signup');
 
-    accountSubtitle.textContent =
-      "Crie sua conta para acompanhar seus estudos.";
+    accountSubtitle.textContent = window.siteT('signupSubtitle');
 
-    accountSubmit.textContent =
-      "Cadastrar";
+    accountSubmit.textContent = window.siteT('signup');
 
-    googleButtonText.textContent =
-      "Cadastrar com o Google";
+    googleButtonText.textContent = window.siteT('googleSignup');
 
-    switchAccount.textContent =
-      "Voltar para entrar";
+    switchAccount.textContent = window.siteT('backLogin');
 
     mostrarStatus("");
 
@@ -2090,17 +2266,14 @@ const firebaseConfig = {
 
     if (!user) {
 
-      accountLabel.textContent =
-        "Entrar";
+      accountLabel.textContent = window.siteT('login');
 
-      profileName.textContent =
-        "Visitante";
+      profileName.textContent = window.siteT('visitor');
 
       profileNameInput.value = "";
 
-      headerAvatar.textContent = "Q";
-
-      profileAvatar.textContent = "Q";
+      renderAvatar(headerAvatar, "Q", null);
+      renderAvatar(profileAvatar, "Q", null);
 
       return;
 
@@ -2142,15 +2315,14 @@ const firebaseConfig = {
         nome;
 
 
-      const primeiraLetra =
-        nome.charAt(0).toUpperCase();
+      const savedProfileImage =
+        localStorage.getItem("quimica-profile-image");
 
+      const photoUrl =
+        savedProfileImage || user.photoURL || null;
 
-      headerAvatar.textContent =
-        primeiraLetra;
-
-      profileAvatar.textContent =
-        primeiraLetra;
+      renderAvatar(headerAvatar, nome, photoUrl);
+      renderAvatar(profileAvatar, nome, photoUrl);
 
 
     } catch (erro) {
@@ -2396,44 +2568,7 @@ const firebaseConfig = {
   }
 
 </script>
-<script>
-(function () {
-  function ensureReaderButton() {
-    var button = document.getElementById('readerButton');
-    var panel = document.getElementById('readerPanel');
-    if (!button || !panel) return;
-    window.toggleReaderPanel = window.toggleReaderPanel || function (event) {
-      if (event) event.preventDefault();
-      var open = !panel.classList.contains('open');
-      panel.classList.toggle('open', open);
-      button.setAttribute('aria-expanded', open ? 'true' : 'false');
-    };
-    if (!button.getAttribute('onclick')) button.setAttribute('onclick', 'toggleReaderPanel(event)');
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ensureReaderButton);
-  else ensureReaderButton();
-})();
-</script>
 
-<script>
-(function(){
-  function init(){
-    const b=document.getElementById('readerButton'),p=document.getElementById('readerPanel'),st=document.getElementById('readerLanguage');
-    const start=document.getElementById('readStart'),pause=document.getElementById('readPause'),resume=document.getElementById('readResume'),stop=document.getElementById('readStop'),rate=document.getElementById('readerRate'),rv=document.getElementById('readerRateValue'),bar=document.getElementById('readerProgressBar'),sel=document.getElementById('readerVoice');
-    if(!b||!p||!st||!start)return;
-    const sy=window.speechSynthesis||null; let voices=[],q=[],i=0,active=false,current=null;
-    window.quimicaReaderToggle=function(e){if(e){e.preventDefault();e.stopPropagation()} const open=!p.classList.contains('open');p.classList.toggle('open',open);b.setAttribute('aria-expanded',String(open));if(open){st.textContent=sy?'Pronto. Clique em “Ler site”.':'Seu navegador não oferece leitura de voz.';load()}return false};
-    function load(){if(!sy||!sel)return;voices=sy.getVoices()||[];sel.innerHTML='';const lang=(document.documentElement.lang||'pt-BR').toLowerCase(),base=lang.split('-')[0],list=voices.filter(v=>v.lang&&v.lang.toLowerCase().startsWith(base+'-'));(list.length?list:voices).forEach((v,n)=>{const o=document.createElement('option');o.value=n;o.textContent=v.name+' ('+v.lang+')';sel.appendChild(o)});if(!sel.options.length){const o=document.createElement('option');o.textContent='Voz padrão do navegador';sel.appendChild(o)}}
-    function voice(){const o=sel&&sel.options[sel.selectedIndex];return o?voices.find(v=>o.textContent===v.name+' ('+v.lang+')'):null}
-    function text(){return Array.from(document.querySelectorAll('.content-overlay h1,.content-overlay h2,.content-overlay p,.extra-content h2,.extra-content p,.extra-intro,.resource-card h3,.resource-card p,.site-footer .footer-title,.site-footer .footer-help')).map(x=>(x.innerText||x.textContent||'').replace(/\s+/g,' ').trim()).filter(Boolean).join('. ')}
-    function queue(t){const a=t.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[t],r=[];let z='';a.forEach(x=>{x=x.trim();if(!x)return;if((z+' '+x).trim().length<=220)z=(z+' '+x).trim();else{if(z)r.push(z);while(x.length>220){r.push(x.slice(0,220));x=x.slice(220)}z=x}});if(z)r.push(z);return r}
-    function ui(){const speaking=!!(sy&&sy.speaking),paused=!!(sy&&sy.paused);start.disabled=active&&(speaking||paused);if(pause)pause.disabled=!speaking||paused;if(resume)resume.disabled=!paused;if(stop)stop.disabled=!active&&!speaking&&!paused}
-    function next(){if(!active||!sy)return;if(i>=q.length){active=false;current=null;bar&&(bar.style.width='100%');st.textContent='Leitura concluída.';ui();return}const u=new SpeechSynthesisUtterance(q[i]);current=u;u.rate=Number(rate&&rate.value)||1;u.volume=1;u.pitch=1;const v=voice();u.voice=v||null;u.lang=v?v.lang:(document.documentElement.lang||'pt-BR');u.onstart=()=>{st.textContent='Lendo '+(i+1)+' de '+q.length+'...';if(bar)bar.style.width=(i/q.length*100)+'%';ui()};u.onend=()=>{if(active&&current===u){i++;current=null;setTimeout(next,120)}};u.onerror=e=>{if(active&&current===u){active=false;current=null;st.textContent='Erro de voz: '+(e.error||'desconhecido')+'.';ui()}};try{sy.resume();sy.speak(u)}catch(e){active=false;st.textContent='Não foi possível iniciar a leitura.';ui()}}
-    function begin(){if(!sy||typeof SpeechSynthesisUtterance==='undefined'){st.textContent='Leitura de voz não está disponível neste navegador.';return}const t=text();if(!t){st.textContent='Não encontrei conteúdo para ler.';return}sy.cancel();q=queue(t);i=0;active=true;if(bar)bar.style.width='0%';st.textContent='Iniciando leitura...';ui();next()}
-    start.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();begin()});pause&&pause.addEventListener('click',()=>{if(sy&&sy.speaking&&!sy.paused){sy.pause();st.textContent='Leitura pausada.';ui()}});resume&&resume.addEventListener('click',()=>{if(sy&&sy.paused){sy.resume();st.textContent='Continuando leitura...';ui()}else if(!active)begin()});stop&&stop.addEventListener('click',()=>{active=false;if(sy)sy.cancel();current=null;st.textContent='Leitura parada.';ui()});rate&&rate.addEventListener('input',()=>{if(rv)rv.textContent=Number(rate.value).toFixed(1).replace('.',',')+'x'});if(sy&&sy.addEventListener)sy.addEventListener('voiceschanged',load);load();ui();
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-})();
-</script>
+
 </body>
 </html>
